@@ -33,6 +33,11 @@ function RunLoadTest {
 	CreateAndUploadConfig -TestTenantConfig $TestTenantConfig -TestUid $TestUid
 
     $LatestRunSaveFilePath = (Get-Location).ToString() +"\out\latest_run.txt"
+    $OutDir = (Get-Location).ToString() +"\out"
+    If(!(test-path $OutDir))
+    {
+        New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+    }
     Write-Output "Triggered LoadTest for TestUid: $TestUid TestDocFolder: $TestDocFolder" `
     | Out-File -FilePath $LatestRunSaveFilePath
 }
