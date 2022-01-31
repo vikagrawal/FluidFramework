@@ -6,6 +6,9 @@
     It then fetches the results of the scale test by running the queryResultsAuto.ps1 script at QueryTime.
 
     The times are in Coordinated Universal Time (UTC) unless specified otherwise.
+
+    Presently, frequency for the Start-Load-Test, Stop-Load-Test and Fetch-Load-Test-Results tasks
+    is Daily, and that of the Merge-From-Upstream task is once every 3 days.
 #>
 
 Param(
@@ -25,7 +28,13 @@ Param(
     [string]$QueryTime = "02:00 pm",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Location of the fetch results script')]
-    [string]$QueryScriptPath = "C:\loadtest\queryResultsAuto.ps1"
+    [string]$QueryScriptPath = "C:\loadtest\queryResultsAuto.ps1",
+
+    [Parameter(Mandatory = $false, HelpMessage = 'Time at which changes from upstream are to be updated')]
+    [string]$UpdateTime = "03:00 am",
+
+    [Parameter(Mandatory = $false, HelpMessage = 'Location of the merge-from-upstream script')]
+    [string]$UpdateScriptPath = "C:\loadtest\mergeUpstreamMainAuto.ps1"
 )
 
 function registerTask {
@@ -39,13 +48,19 @@ function registerTask {
         .PARAMETER ScheduledTime
             Time at which the Scheduled Task is to be triggered
         
+        .PARAMETER Frequency
+            Frequency (in units of Days) at which the Scheduled Task is to be triggered
+        
         .PARAMETER ScriptPath
             Path to the script that is to be executed as a scheduled task
     #>
     Param(
+        [Parameter()]
         [string]$TaskName,
         [Parameter()]
         [string]$ScheduledTime,
+        [Parameter()]
+        [string]$Frequency,
         [Parameter()]
         [string]$ScriptPath
     )
@@ -57,7 +72,7 @@ function registerTask {
     $Settings = New-ScheduledTaskSettingsSet -Compatibility Win8
     
     # Execute Action at the given Trigger
-    $Trigger = New-ScheduledTaskTrigger -Daily -At $ScheduledTime
+    $Trigger = New-ScheduledTaskTrigger -Daily -DaysInterval $Frequency -At $ScheduledTime
     $Action = New-ScheduledTaskAction -Execute $ExecProg -Argument "-File $ScriptPath" 
     Register-ScheduledTask -TaskName $TaskName -Trigger $Trigger -Action $Action `
     -Principal $Principal -Settings $Settings
@@ -65,13 +80,20 @@ function registerTask {
     Write-Host $OutputMessage -ForegroundColor Green
 }
 
+# Register the Merge-From-Upstream task at the specified start time
+registerTask -TaskName "Merge-From-Upstream" -ScheduledTime $UpdateTime `
+-Frequency "3" -ScriptPath $UpdateScriptPath
 
 # Register the Start-Load-Test task at the specified start time
-registerTask -TaskName "Start-Load-Test" -ScheduledTime $StartTime -ScriptPath $StartScriptPath
+registerTask -TaskName "Start-Load-Test" -ScheduledTime $StartTime `
+-Frequency "1" -ScriptPath $StartScriptPath
 
 # Register the Stop-Load-Test task at the specified stop time
-registerTask -TaskName "Stop-Load-Test" -ScheduledTime $StopTime -ScriptPath $StopScriptPath
+registerTask -TaskName "Stop-Load-Test" -ScheduledTime $StopTime `
+-Frequency "1" -ScriptPath $StopScriptPath
 
 # Register the fetch results task at the specified time
-registerTask -TaskName "Fetch-Load-Test-Results" -ScheduledTime $QueryTime -ScriptPath $QueryScriptPath
+registerTask -TaskName "Fetch-Load-Test-Results" -ScheduledTime $QueryTime `
+-Frequency "1" -ScriptPath $QueryScriptPath
+
 
