@@ -1,14 +1,15 @@
 <#
-    Script to register and run startScaleTestAuto.ps1, stopScaleTestAuto.ps1 and queryResultsAuto.ps1 
-    as Scheduled Tasks.
+    Script to register and run startScaleTestAuto.ps1, stopScaleTestAuto.ps1, queryResultsAuto.ps1,
+    mergeUpstreamMainAuto.ps1, and mailAuto.ps1 as Scheduled Tasks.
 
     Starts the Fluid Scale test at the StartTime specified, and stops the test at the specified StopTime.
     It then fetches the results of the scale test by running the queryResultsAuto.ps1 script at QueryTime.
+    Finally, the results of the load test are mailed to the appropriate mailing list.
 
     The times are in Coordinated Universal Time (UTC) unless specified otherwise.
 
-    Presently, frequency for the Start-Load-Test, Stop-Load-Test and Fetch-Load-Test-Results tasks
-    is Daily, and that of the Merge-From-Upstream task is once every 3 days.
+    Presently, frequency for the Start-Load-Test, Stop-Load-Test, Fetch-Load-Test-Results and
+    Mail-Load-Test-Results tasks is Daily, and that of the Merge-From-Upstream task is once every 3 days.
 #>
 
 Param(
@@ -30,11 +31,18 @@ Param(
     [Parameter(Mandatory = $false, HelpMessage = 'Location of the fetch results script')]
     [string]$QueryScriptPath = "C:\loadtest\queryResultsAuto.ps1",
 
+    [Parameter(Mandatory = $false, HelpMessage = 'Time at which load test results are to be mailed')]
+    [string]$MailTime = "02:05 pm",
+
+    [Parameter(Mandatory = $false, HelpMessage = 'Location of the programmatic results mailer script')]
+    [string]$MailScriptPath = "C:\loadtest\mailAuto.ps1",
+
     [Parameter(Mandatory = $false, HelpMessage = 'Time at which changes from upstream are to be updated')]
     [string]$UpdateTime = "03:00 am",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Location of the merge-from-upstream script')]
     [string]$UpdateScriptPath = "C:\loadtest\mergeUpstreamMainAuto.ps1"
+
 )
 
 function registerTask {
@@ -96,4 +104,6 @@ registerTask -TaskName "Stop-Load-Test" -ScheduledTime $StopTime `
 registerTask -TaskName "Fetch-Load-Test-Results" -ScheduledTime $QueryTime `
 -Frequency "1" -ScriptPath $QueryScriptPath
 
-
+# Register the mail results task at the specified time
+registerTask -TaskName "Mail-Load-Test-Results" -ScheduledTime $MailTime `
+-Frequency "1" -ScriptPath $MailScriptPath

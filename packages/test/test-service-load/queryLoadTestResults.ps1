@@ -74,9 +74,11 @@ function QueryLoadTestResults{
     # CURL command to fetch the results as a JSON object, and pretty print & pipe the JSON into an output file
     curl.exe "$SiteURL/v1/apps/$AppID/query?timespan=$Timespan&query=$URLQuery" -H "x-api-key: $APIKey" `
              | python -m json.tool | Out-File -FilePath $SaveResults
-
+    
+    [System.Environment]::SetEnvironmentVariable('LoadTestResultsFile', `
+                                             $SaveResults, `
+                                             [System.EnvironmentVariableTarget]::User)
+                                             
     Write-Host "Results of the latest load test, TestGuid: $LoadTestGuid fetched and written to $SaveResults" `
                 -ForegroundColor Green
 }
-
-
