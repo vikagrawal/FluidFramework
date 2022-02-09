@@ -37,7 +37,10 @@ function QueryLoadTestResults{
         [string]$Timespan = "PT12H",
         
         [Parameter(Mandatory = $false, HelpMessage = 'Kusto Query to get the results of the Load Test')]
-        [string]$KustoQueryName = "TestRunSummary"
+        [string]$KustoQueryName = "TestRunSummary",
+
+        [Parameter(Mandatory = $false, HelpMessage = 'Path to JSON file containing query commands')]
+        [string]$QueryCommandsPath = ".\QueryCommands.json"
     )
 
     # AppInsights URL 
@@ -61,7 +64,8 @@ function QueryLoadTestResults{
     if($KustoQueryName -eq "TestRunSummary")
     {
        # KustoQuery to fetch the TestRunSummary results
-       $KustoQuery = 'let searchTestUid = "{0}";let searchTimeStart = datetime({1});let searchTimeEnd = datetime({2});customEvents| where timestamp between(searchTimeStart .. searchTimeEnd)| extend testUid = tostring(customDimensions.testUid)| where testUid == searchTestUid| extend category = tostring(customDimensions.category), error = tostring(customDimensions.error), runId = toint(customDimensions.runId), eventName = tostring(customDimensions.eventName)| where category == "error" and error !has "deprecated" and error !contains "fluid:telemetry:SummaryStatus Behind" and eventName != "fluid:telemetry:SummaryStatus:Behind" and error !has "MaxListenersExceededWarning" and eventName != "Runner Error"| summarize errCnt = count() by error, eventName| summarize errCount = sum(errCnt), errors = make_bag(pack(iif(isnotempty(error), error, "Unknown"), errCnt)) by eventName| order by errCount' -f $LoadTestGuid,$LoadTestStartTime,$LoadTestStopTime
+       $ReadQuery = Get-Content $QueryCommandsPath | ConvertFrom-Json
+       $KustoQuery = $ReadQuery.${KustoQueryName} -f $LoadTestGuid,$LoadTestStartTime,$LoadTestStopTime
     }
 
     # Encode Kusto Query into the URI space
