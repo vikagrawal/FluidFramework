@@ -4,7 +4,7 @@
     as an appropriate environment variable.
 #>
 
-$PasswordLocation = "Programmatic Mailer Password Path"
+$PasswordLocation = "<Programmatic Mailer Password Path>"
 # Enter the password, to be stored as a secure string
 Write-Host "Enter the password for the automatic mailer" -ForegroundColor Cyan
 read-host -assecurestring | convertfrom-securestring | out-file $PasswordLocation
