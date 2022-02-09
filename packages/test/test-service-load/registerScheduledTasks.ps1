@@ -84,7 +84,7 @@ function registerTask {
     $Action = New-ScheduledTaskAction -Execute $ExecProg -Argument "-File $ScriptPath" 
     Register-ScheduledTask -TaskName $TaskName -Trigger $Trigger -Action $Action `
     -Principal $Principal -Settings $Settings
-    $OutputMessage ="Successfully Registered the {0} Scheduled Task" -f $TaskName
+    $OutputMessage = "Successfully Registered the {0} Scheduled Task" -f $TaskName
     Write-Host $OutputMessage -ForegroundColor Green
 }
 

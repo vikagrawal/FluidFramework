@@ -18,7 +18,7 @@ Param(
     [Parameter(Mandatory = $false, HelpMessage = 'Profile to run test with')]
     [string]$Profile = 'scale',
 
-    [Parameter(Mandatory = $false, HelpMessage = 'AKS Namespace.')]
+    [Parameter(Mandatory = $false, HelpMessage = 'AKS Namespace')]
     [ValidateScript({ ( $NumOfDocs -le 10 ) -or ($_ -eq 'fluid-scale-test' ) })]
     [string]$Namespace = 'fluid-scale-test',
 
@@ -32,7 +32,7 @@ Param(
     [string]$NodeCount = '5',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the resource group')]
-    [string]$ResourceGroup= 'Fluid.Load.Test',
+    [string]$ResourceGroup = 'Fluid.Load.Test',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the AKS Cluster')]
     [string]$AKSClusterName = 'LoadTestAks1',
@@ -92,13 +92,13 @@ Wait-Job $DeleteJob
 Receive-Job $DeleteJob
 
 # Sets the StartTime environment variable - which will later be used by the queryLoadTestResults script
-$StartTime=(Get-Date -Format "yyyy-MM-ddTHH:mm").ToString()
+$StartTime = (Get-Date -Format "yyyy-MM-ddTHH:mm").ToString()
 [System.Environment]::SetEnvironmentVariable('LoadTestStartTime', `
                                              $StartTime, `
                                              [System.EnvironmentVariableTarget]::User)
 
 Write-Host "Re-Triggering Load Test" -ForegroundColor Green
 # Modify $OutFile as appropriate to point to the location where you want to save the output of `RunLoadTest`
-$OutFile =   (Get-Location).ToString() +"\out\" + (Get-Date -Format "dddd MM_dd_yyyy HH_mm").ToString() + ".txt"
+$OutFile = (Get-Location).ToString() +"\out\" + (Get-Date -Format "dddd MM_dd_yyyy HH_mm").ToString() + ".txt"
 RunLoadTest -Profile $Profile -NumOfDocs $NumOfDocs -TestTenantConfig $TestTenantConfig `
             | Out-File -FilePath $OutFile

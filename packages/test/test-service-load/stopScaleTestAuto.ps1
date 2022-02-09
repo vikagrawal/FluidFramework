@@ -8,15 +8,14 @@
 #>
 
 Param(
-    [Parameter(Mandatory = $false, HelpMessage = 'AKS Namespace.')]
-    [ValidateScript({ ( $NumOfDocs -le 10 ) -or ($_ -eq 'fluid-scale-test' ) })]
+    [Parameter(Mandatory = $false, HelpMessage = 'AKS Namespace')]
     [string]$Namespace = 'fluid-scale-test',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Number of nodes to which the node pool should be scaled')]
     [string]$NodeCount = '0',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the resource group')]
-    [string]$ResourceGroup= 'Fluid.Load.Test',
+    [string]$ResourceGroup = 'Fluid.Load.Test',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the AKS Cluster')]
     [string]$AKSClusterName = 'LoadTestAks1',
@@ -45,14 +44,14 @@ $ScaleNodesJob = Start-Job $_ScaleNodesJob -ArgumentList $NodeCount, `
                                                          $NodePoolName
 Wait-Job $ScaleNodesJob
 Receive-Job $ScaleNodesJob
-Write-Host "Finished scaling down the node pool  " -ForegroundColor Green
+Write-Host "Finished scaling down the node pool" -ForegroundColor Green
 
-Write-Host "Powering Off Managed Cluster  " -ForegroundColor Green
+Write-Host "Powering Off Managed Cluster" -ForegroundColor Green
 az aks stop -n $AKSClusterName -g $ResourceGroup
-Write-Host "Powered Off Managed Cluster  " -ForegroundColor Green
+Write-Host "Powered Off Managed Cluster" -ForegroundColor Green
 
 # Sets the StopTime environment variable - which will later be used by the queryLoadTestResults script
-$StopTime=(Get-Date -Format "yyyy-MM-ddTHH:mm").ToString()
+$StopTime = (Get-Date -Format "yyyy-MM-ddTHH:mm").ToString()
 [System.Environment]::SetEnvironmentVariable('LoadTestStopTime', `
                                               $StopTime, `
                                               [System.EnvironmentVariableTarget]::User)
