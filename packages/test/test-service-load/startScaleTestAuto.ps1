@@ -16,7 +16,7 @@ Param(
     [int]$NumOfDocs = 10,
 
     [Parameter(Mandatory = $false, HelpMessage = 'Profile to run test with')]
-    [string]$Profile = '<Test Profile>',
+    [string]$Profile = "<Test Profile>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'AKS Namespace')]
     [ValidateScript({ ( $NumOfDocs -le 10 ) -or ($_ -eq 'fluid-scale-test' ) })]
@@ -26,19 +26,19 @@ Param(
     [string]$TestDocFolder = [Math]::Floor([decimal](Get-Date(Get-Date).ToUniversalTime() -uformat '%s')),
 
     [Parameter(Mandatory = $false, HelpMessage = 'File with tenants and users information')]
-    [string]$TestTenantConfig = '<TestTenantConfig File Path>',
+    [string]$TestTenantConfig = "<TestTenantConfig File Path>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Number of nodes to which the node pool should be scaled')]
     [string]$NodeCount = '5',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the resource group')]
-    [string]$ResourceGroup = '<Resource Group Name>',
+    [string]$ResourceGroup = "<Resource Group Name>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the AKS Cluster')]
-    [string]$AKSClusterName = '<AKS Cluster Name>',
+    [string]$AKSClusterName = "<AKS Cluster Name>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the node pool to be scaled')]
-    [string]$NodePoolName = '<Node Pool Name>',
+    [string]$NodePoolName = "<Node Pool Name>",
 
     # Restart the load test after a specified time to avoid the Cold Start issue
     [Parameter(Mandatory = $false, HelpMessage = 'Time (in min) after which the scale test is re-triggered')]
