@@ -9,22 +9,22 @@
 
 Param(
     [Parameter(Mandatory = $false, HelpMessage = 'AKS Namespace')]
-    [string]$Namespace = 'fluid-scale-test',
+    [string]$Namespace = '<Load Test Profile>',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Number of nodes to which the node pool should be scaled')]
     [string]$NodeCount = '0',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the resource group')]
-    [string]$ResourceGroup = 'Fluid.Load.Test',
+    [string]$ResourceGroup = '<Resource Group Name>',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the AKS Cluster')]
-    [string]$AKSClusterName = 'LoadTestAks1',
+    [string]$AKSClusterName = '<AKS Cluster Name>',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the node pool to be scaled')]
-    [string]$NodePoolName = 'testpods',
+    [string]$NodePoolName = '<Node Pool Name>',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Load Test Scripts Directory')]
-    [string]$LoadTestDir = "C:\loadtest"
+    [string]$LoadTestDir = "<Load Test Codebase Directory>"
 )
 
 # Make sure this points to the right directory in your local setup (wherever the load test scripts are present)
@@ -37,7 +37,7 @@ Write-Host "Scaling down the node pool  " -ForegroundColor Green
 $_ScaleNodesJob = { param($nodecount, $resourcegroup, $aksclustername, $nodepoolname) `
                    az aks scale --resource-group $resourcegroup --name $aksclustername `
                    --node-count $nodecount --nodepool-name $nodepoolname 
-                 }
+                  }
 $ScaleNodesJob = Start-Job $_ScaleNodesJob -ArgumentList $NodeCount, `
                                                          $ResourceGroup, `
                                                          $AKSClusterName, `

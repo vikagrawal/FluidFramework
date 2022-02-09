@@ -60,7 +60,7 @@ function QueryLoadTestResults{
 
     if($KustoQueryName -eq "TestRunSummary")
     {
-        # KustoQuery to fetch the TestRunSummary results
+       # KustoQuery to fetch the TestRunSummary results
        $KustoQuery = 'let searchTestUid = "{0}";let searchTimeStart = datetime({1});let searchTimeEnd = datetime({2});customEvents| where timestamp between(searchTimeStart .. searchTimeEnd)| extend testUid = tostring(customDimensions.testUid)| where testUid == searchTestUid| extend category = tostring(customDimensions.category), error = tostring(customDimensions.error), runId = toint(customDimensions.runId), eventName = tostring(customDimensions.eventName)| where category == "error" and error !has "deprecated" and error !contains "fluid:telemetry:SummaryStatus Behind" and eventName != "fluid:telemetry:SummaryStatus:Behind" and error !has "MaxListenersExceededWarning" and eventName != "Runner Error"| summarize errCnt = count() by error, eventName| summarize errCount = sum(errCnt), errors = make_bag(pack(iif(isnotempty(error), error, "Unknown"), errCnt)) by eventName| order by errCount' -f $LoadTestGuid,$LoadTestStartTime,$LoadTestStopTime
     }
 
@@ -68,16 +68,16 @@ function QueryLoadTestResults{
     $URLQuery = [uri]::EscapeDataString($KustoQuery)		
 
     $SaveFileSuffix = "_{0}.txt" -f $KustoQueryName
-    $SaveResults =   (Get-Location).ToString() +"\out\" + `
-                     (Get-Date -Format "dddd MM_dd_yyyy HH_mm").ToString() + $SaveFileSuffix
+    $SaveResults = (Get-Location).ToString() +"\out\" + `
+                   (Get-Date -Format "dddd MM_dd_yyyy HH_mm").ToString() + $SaveFileSuffix
 
     # CURL command to fetch the results as a JSON object, and pretty print & pipe the JSON into an output file
     curl.exe "$SiteURL/v1/apps/$AppID/query?timespan=$Timespan&query=$URLQuery" -H "x-api-key: $APIKey" `
              | python -m json.tool | Out-File -FilePath $SaveResults
     
     [System.Environment]::SetEnvironmentVariable('LoadTestResultsFile', `
-                                             $SaveResults, `
-                                             [System.EnvironmentVariableTarget]::User)
+                                                 $SaveResults, `
+                                                 [System.EnvironmentVariableTarget]::User)
                                              
     Write-Host "Results of the latest load test, TestGuid: $LoadTestGuid fetched and written to $SaveResults" `
                 -ForegroundColor Green

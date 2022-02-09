@@ -5,8 +5,7 @@
     Make sure that the appropriate environment variables are set.
 #>
 
-Param(
-    
+Param(  
     [Parameter(Mandatory = $false, HelpMessage = 'Mail Address of the Sender')]
     [string]$MailFrom = "<Sender Mail Address>",
 
@@ -21,7 +20,6 @@ Param(
 
     [Parameter(Mandatory = $false, HelpMessage = 'Full Path of the results file to be attached')]
     [string]$AttachmentPath = [System.Environment]::GetEnvironmentVariable('LoadTestResultsFile')
-
 )
 
 function Invoke-SetProperty {

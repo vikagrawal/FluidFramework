@@ -16,36 +16,36 @@ Param(
     [int]$NumOfDocs = 10,
 
     [Parameter(Mandatory = $false, HelpMessage = 'Profile to run test with')]
-    [string]$Profile = 'scale',
+    [string]$Profile = '<Test Profile>',
 
     [Parameter(Mandatory = $false, HelpMessage = 'AKS Namespace')]
     [ValidateScript({ ( $NumOfDocs -le 10 ) -or ($_ -eq 'fluid-scale-test' ) })]
-    [string]$Namespace = 'fluid-scale-test',
+    [string]$Namespace = "<Load Test Profile>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Folder to create in Storage for test files')]
     [string]$TestDocFolder = [Math]::Floor([decimal](Get-Date(Get-Date).ToUniversalTime() -uformat '%s')),
 
     [Parameter(Mandatory = $false, HelpMessage = 'File with tenants and users information')]
-    [string]$TestTenantConfig = '.\testTenantConfig_vmss.json',
+    [string]$TestTenantConfig = '<TestTenantConfig File Path>',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Number of nodes to which the node pool should be scaled')]
     [string]$NodeCount = '5',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the resource group')]
-    [string]$ResourceGroup = 'Fluid.Load.Test',
+    [string]$ResourceGroup = '<Resource Group Name>',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the AKS Cluster')]
-    [string]$AKSClusterName = 'LoadTestAks1',
+    [string]$AKSClusterName = '<AKS Cluster Name>',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Name of the node pool to be scaled')]
-    [string]$NodePoolName = 'testpods',
+    [string]$NodePoolName = '<Node Pool Name>',
 
     # Restart the load test after a specified time to avoid the Cold Start issue
     [Parameter(Mandatory = $false, HelpMessage = 'Time (in min) after which the scale test is re-triggered')]
     [int]$RestartTime = 60,
 
     [Parameter(Mandatory = $false, HelpMessage = 'Load Test Scripts Directory')]
-    [string]$LoadTestDir = "C:\loadtest"
+    [string]$LoadTestDir = "<Load Test Codebase Directory>"
 )
 
 # Make sure this points to the right directory in your local setup (wherever the load test scripts are present)
@@ -66,7 +66,7 @@ Write-Host "Scaling the Node Pool" -ForegroundColor Green
 $_ScaleNodesJob = { param($nodecount, $resourcegroup, $aksclustername, $nodepoolname) `
                    az aks scale --resource-group $resourcegroup --name $aksclustername `
                    --node-count $nodecount --nodepool-name $nodepoolname 
-                 }
+                  }
 $ScaleNodesJob = Start-Job $_ScaleNodesJob -ArgumentList $NodeCount, `
                                                          $ResourceGroup, `
                                                          $AKSClusterName, `

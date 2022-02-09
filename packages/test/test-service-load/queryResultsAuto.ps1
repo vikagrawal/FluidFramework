@@ -7,7 +7,7 @@
 
 Param(
     [Parameter(Mandatory = $false, HelpMessage = 'Load Test Scripts Directory')]
-    [string]$LoadTestDir = "C:\loadtest"
+    [string]$LoadTestDir = "<Load Test Codebase Directory>"
 )
 
 # Make sure this points to the right directory in your local setup (wherever the load test scripts are present)

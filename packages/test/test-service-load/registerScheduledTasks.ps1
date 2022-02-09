@@ -14,38 +14,38 @@
 
 Param(
     [Parameter(Mandatory = $false, HelpMessage = 'Start time for the load test')]
-    [string]$StartTime = "03:30 am",
+    [string]$StartTime = "<Load Test Start Time>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Location of the start script')]
-    [string]$StartScriptPath = "C:\loadtest\startScaleTestAuto.ps1",
+    [string]$StartScriptPath = "<Start Script Path>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Stop time for the load test')]
-    [string]$StopTime = "01:30 pm",
+    [string]$StopTime = "<Load Test Stop Time>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Location of the stop script')]
-    [string]$StopScriptPath = "C:\loadtest\stopScaleTestAuto.ps1",
+    [string]$StopScriptPath = "<Stop Script Path>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Time at which load test results are to be fetched')]
-    [string]$QueryTime = "02:00 pm",
+    [string]$QueryTime = "<Load Test Query Results Time>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Location of the fetch results script')]
-    [string]$QueryScriptPath = "C:\loadtest\queryResultsAuto.ps1",
+    [string]$QueryScriptPath = "<Fetch Results Path>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Time at which load test results are to be mailed')]
-    [string]$MailTime = "02:05 pm",
+    [string]$MailTime = "<Load Test Mail Results Time>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Location of the programmatic results mailer script')]
-    [string]$MailScriptPath = "C:\loadtest\mailAuto.ps1",
+    [string]$MailScriptPath = "<Programmatic Mailer Path>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Time at which changes from upstream are to be updated')]
-    [string]$UpdateTime = "03:00 am",
+    [string]$UpdateTime = "<Load Test Codebase Update Time>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Location of the merge-from-upstream script')]
-    [string]$UpdateScriptPath = "C:\loadtest\mergeUpstreamMainAuto.ps1"
+    [string]$UpdateScriptPath = "<Merge Updates Script Path>"
 
 )
 
-function registerTask {
+function RegisterTask {
     <#
         .SYNOPSIS
             Registers the task with the given name, to be triggered at the specified time.
@@ -89,21 +89,21 @@ function registerTask {
 }
 
 # Register the Merge-From-Upstream task at the specified start time
-registerTask -TaskName "Merge-From-Upstream" -ScheduledTime $UpdateTime `
+RegisterTask -TaskName "Merge-From-Upstream" -ScheduledTime $UpdateTime `
 -Frequency "3" -ScriptPath $UpdateScriptPath
 
 # Register the Start-Load-Test task at the specified start time
-registerTask -TaskName "Start-Load-Test" -ScheduledTime $StartTime `
+RegisterTask -TaskName "Start-Load-Test" -ScheduledTime $StartTime `
 -Frequency "1" -ScriptPath $StartScriptPath
 
 # Register the Stop-Load-Test task at the specified stop time
-registerTask -TaskName "Stop-Load-Test" -ScheduledTime $StopTime `
+RegisterTask -TaskName "Stop-Load-Test" -ScheduledTime $StopTime `
 -Frequency "1" -ScriptPath $StopScriptPath
 
 # Register the fetch results task at the specified time
-registerTask -TaskName "Fetch-Load-Test-Results" -ScheduledTime $QueryTime `
+RegisterTask -TaskName "Fetch-Load-Test-Results" -ScheduledTime $QueryTime `
 -Frequency "1" -ScriptPath $QueryScriptPath
 
 # Register the mail results task at the specified time
-registerTask -TaskName "Mail-Load-Test-Results" -ScheduledTime $MailTime `
+RegisterTask -TaskName "Mail-Load-Test-Results" -ScheduledTime $MailTime `
 -Frequency "1" -ScriptPath $MailScriptPath
