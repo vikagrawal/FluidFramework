@@ -61,7 +61,7 @@
         },
         "scale": {
             "opRatePerMin": 60,
-            "signalToOpRatio": 25, 
+            "signalToOpRatio": 27, 
             "progressIntervalMs": 20000,
             "numClients": 10,
             "totalSendCount": 70000,
