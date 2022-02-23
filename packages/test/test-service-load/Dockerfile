@@ -23,6 +23,7 @@ COPY common/ common/
 COPY experimental/ experimental/
 COPY packages/ packages/
 COPY tools/ tools/
+COPY examples/ examples/
 COPY package.json .
 COPY package-lock.json .
 COPY lerna.json .
