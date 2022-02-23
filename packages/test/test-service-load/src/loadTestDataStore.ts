@@ -31,6 +31,7 @@ export interface IRunConfig {
 export interface ILoadTest {
     run(config: IRunConfig, reset: boolean): Promise<boolean>;
     detached(config: Omit<IRunConfig, "runId">): Promise<LoadTestDataStoreModel>;
+    getRuntime(): Promise<IFluidDataStoreRuntime>;
 }
 
 const taskManagerKey = "taskManager";
@@ -428,7 +429,11 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
 
         const clientSendCount = config.testConfig.totalSendCount / config.testConfig.numClients;
         const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
-        const opsGapMs = cycleMs / opsPerCycle;
+        // if signalToOpRatio is unspecified, take the default value as 0. Else, round it up
+        const signalsPerOp: number = (typeof config.testConfig.signalToOpRatio === 'undefined') ? 
+                                         0 : Math.ceil(config.testConfig.signalToOpRatio); 
+        const opsPlusSignalsPerCycle: number = (opsPerCycle + opsPerCycle*signalsPerOp)
+        const opsGapMs = cycleMs / opsPlusSignalsPerCycle;
         try {
             while (dataModel.counter.value < clientSendCount && !this.disposed) {
                 // this enables a quick ramp down. due to restart, some clients can lag
@@ -441,6 +446,10 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
 
                 if (dataModel.haveTaskLock()) {
                     dataModel.counter.increment(1);
+                    for (let count = 0; count < signalsPerOp; count++)
+                    {
+                        this.runtime.submitSignal("generic-signal", true)
+                    }
                     if (dataModel.counter.value % opsPerCycle === 0) {
                         await dataModel.blobFinish();
                         dataModel.abandonTask();
@@ -461,6 +470,9 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
             }
             dataModel.printStatus();
         }
+    }
+    public async getRuntime(){
+        return this.runtime;
     }
 }
 
