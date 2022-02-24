@@ -60,6 +60,15 @@
             "readWriteCycleMs": 30000
         },
         "scale": {
+            "opRatePerMin": 60, 
+            "progressIntervalMs": 20000,
+            "numClients": 10,
+            "totalSendCount": 70000,
+            "readWriteCycleMs": 30000,
+            "faultInjectionMinMs": 900000,
+            "faultInjectionMaxMs": 1800000
+        },
+        "scale_with_signals": {
             "opRatePerMin": 60,
             "signalToOpRatio": 27, 
             "progressIntervalMs": 20000,
