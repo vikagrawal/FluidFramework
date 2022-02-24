@@ -32,7 +32,14 @@ function RunLoadTest {
     # Create and upload configs for pods to trigger tests.
 	CreateAndUploadConfig -TestTenantConfig $TestTenantConfig -TestUid $TestUid
 
-    Write-Output "Triggered LoadTest for TestUid: $TestUid TestDocFolder: $TestDocFolder"
+    $LatestRunSaveFilePath = (Get-Location).ToString() +"\out\latest_run.txt"
+    $OutDir = (Get-Location).ToString() +"\out"
+    If(!(test-path $OutDir))
+    {
+        New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+    }
+    Write-Output "Triggered LoadTest for TestUid: $TestUid TestDocFolder: $TestDocFolder" `
+    | Out-File -FilePath $LatestRunSaveFilePath
 }
 
 function CreateInfra {
