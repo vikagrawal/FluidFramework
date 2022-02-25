@@ -432,8 +432,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
         // if signalToOpRatio is unspecified, take the default value as 0. Else, round it up
         const signalsPerOp: number = (typeof config.testConfig.signalToOpRatio === 'undefined') ? 
                                          0 : Math.ceil(config.testConfig.signalToOpRatio); 
-        const opsPlusSignalsPerCycle: number = (opsPerCycle + opsPerCycle*signalsPerOp)
-        const opsGapMs = cycleMs / opsPlusSignalsPerCycle;
+        const opsGapMs = cycleMs / opsPerCycle;
         try {
             while (dataModel.counter.value < clientSendCount && !this.disposed) {
                 // this enables a quick ramp down. due to restart, some clients can lag

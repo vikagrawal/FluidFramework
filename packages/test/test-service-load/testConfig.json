@@ -69,7 +69,7 @@
             "faultInjectionMaxMs": 1800000
         },
         "scale_with_signals": {
-            "opRatePerMin": 60,
+            "opRatePerMin": 32.6,
             "signalToOpRatio": 27, 
             "progressIntervalMs": 20000,
             "numClients": 10,
