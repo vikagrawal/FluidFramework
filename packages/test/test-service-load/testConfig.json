@@ -52,7 +52,7 @@
             "faultInjectionMinMs": 0,
             "faultInjectionMaxMs": 50000
         },
-        "debug_signals_no_fault": {
+        "debug_signals_nofault": {
             "opRatePerMin": 32.6,
             "signalToOpRatio": 27,
             "progressIntervalMs": 5000,
