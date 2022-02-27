@@ -16,11 +16,11 @@ Param(
     [int]$NumOfDocs = 10,
 
     [Parameter(Mandatory = $false, HelpMessage = 'Profile to run test with')]
-    [string]$Profile = "<Test Profile>",
+    [string]$Profile = "<Load Test Profile>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'AKS Namespace')]
     [ValidateScript({ ( $NumOfDocs -le 10 ) -or ($_ -eq 'fluid-scale-test' ) })]
-    [string]$Namespace = "<Load Test Profile>",
+    [string]$Namespace = "<AKS Load Test Namespace>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Folder to create in Storage for test files')]
     [string]$TestDocFolder = [Math]::Floor([decimal](Get-Date(Get-Date).ToUniversalTime() -uformat '%s')),
