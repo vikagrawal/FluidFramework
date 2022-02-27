@@ -52,6 +52,14 @@
             "faultInjectionMinMs": 0,
             "faultInjectionMaxMs": 50000
         },
+        "debug_signals_no_fault": {
+            "opRatePerMin": 32.6,
+            "signalToOpRatio": 27,
+            "progressIntervalMs": 5000,
+            "numClients": 2,
+            "totalSendCount": 3000,
+            "readWriteCycleMs": 10000
+        },
         "ci_nofault": {
             "opRatePerMin": 10,
             "progressIntervalMs": 15000,
@@ -73,6 +81,26 @@
             "signalToOpRatio": 27, 
             "progressIntervalMs": 20000,
             "numClients": 10,
+            "totalSendCount": 70000,
+            "readWriteCycleMs": 30000,
+            "faultInjectionMinMs": 900000,
+            "faultInjectionMaxMs": 1800000
+        },
+        "custom_scale_with_signals_200": {
+            "opRatePerMin": 32.6,
+            "signalToOpRatio": 27, 
+            "progressIntervalMs": 20000,
+            "numClients": 200,
+            "totalSendCount": 70000,
+            "readWriteCycleMs": 30000,
+            "faultInjectionMinMs": 900000,
+            "faultInjectionMaxMs": 1800000
+        },
+        "custom_scale_with_signals_2": {
+            "opRatePerMin": 32.6,
+            "signalToOpRatio": 27, 
+            "progressIntervalMs": 20000,
+            "numClients": 2,
             "totalSendCount": 70000,
             "readWriteCycleMs": 30000,
             "faultInjectionMinMs": 900000,
