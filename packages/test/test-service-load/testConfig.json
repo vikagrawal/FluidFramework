@@ -54,7 +54,8 @@
         },
         "debug_signals_nofault": {
             "opRatePerMin": 33.6,
-            "signalToOpRatio": 27,
+            "signalsPerMin": 453.6,
+            "totalSignalsSendCount": 81000,
             "progressIntervalMs": 5000,
             "numClients": 2,
             "totalSendCount": 3000,
@@ -78,7 +79,8 @@
         },
         "scale_with_signals": {
             "opRatePerMin": 33.6,
-            "signalsPerMin": 27, 
+            "signalsPerMin": 453.6, 
+            "totalSignalsSendCount": 1890000,
             "progressIntervalMs": 20000,
             "numClients": 10,
             "totalSendCount": 70000,
@@ -88,7 +90,8 @@
         },
         "custom_scale_with_signals_200": {
             "opRatePerMin": 33.6,
-            "signalToOpRatio": 27, 
+            "signalsPerMin": 453.6, 
+            "totalSignalsSendCount": 1890000,
             "progressIntervalMs": 20000,
             "numClients": 200,
             "totalSendCount": 70000,
@@ -98,7 +101,8 @@
         },
         "custom_scale_with_signals_2": {
             "opRatePerMin": 33.6,
-            "signalToOpRatio": 27, 
+            "signalsPerMin": 453.6, 
+            "totalSignalsSendCount": 1890000,
             "progressIntervalMs": 20000,
             "numClients": 2,
             "totalSendCount": 70000,
