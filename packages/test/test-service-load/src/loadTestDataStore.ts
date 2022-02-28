@@ -417,7 +417,6 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
         // To set that up we start each client in a staggered way, each will independently go thru write
         // and listen cycles
 
-        const cycleMs = config.testConfig.readWriteCycleMs;
         let t: NodeJS.Timeout | undefined;
         if (config.verbose) {
             const printProgress = () => {
@@ -427,6 +426,18 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
             t = setTimeout(printProgress, config.testConfig.progressIntervalMs);
         }
 
+
+        const opsRun = this.sendOps(dataModel, config, t)
+        // const signalsRun = this.sendSignals()
+        // const runResult = await Promise.all([opsRun, signalsRun]);
+        const runResult = await opsRun;
+        return runResult;
+    }
+    async getRuntime() {
+        return this.runtime;
+    }
+    async sendOps(dataModel: LoadTestDataStoreModel, config: IRunConfig, t: NodeJS.Timeout | undefined){
+        const cycleMs = config.testConfig.readWriteCycleMs;
         const clientSendCount = config.testConfig.totalSendCount / config.testConfig.numClients;
         const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
         // if signalToOpRatio is unspecified, take the default value as 0. Else, round it up
@@ -442,37 +453,38 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                     && ((await dataModel.getPartnerCounter())?.value ?? 0) >= clientSendCount) {
                     return true;
                 }
-
                 if (dataModel.haveTaskLock()) {
                     dataModel.counter.increment(1);
-                    for (let count = 0; count < signalsPerOp; count++)
-                    {
-                        this.runtime.submitSignal("generic-signal", true)
+                    for (let count = 0; count < signalsPerOp; count++) {
+                        this.runtime.submitSignal("generic-signal", true);
                     }
                     if (dataModel.counter.value % opsPerCycle === 0) {
                         await dataModel.blobFinish();
                         dataModel.abandonTask();
                         // give our partner a half cycle to get the task
                         await delay(cycleMs / 2);
-                    } else {
+                    }
+                    else {
                         // Random jitter of +- 50% of opWaitMs
                         await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
                     }
-                } else {
+                }
+                else {
                     await dataModel.lockTask();
                 }
             }
             return !this.runtime.disposed;
-        } finally {
+        }
+        finally {
             if (t !== undefined) {
                 clearTimeout(t);
             }
             dataModel.printStatus();
         }
     }
-    public async getRuntime(){
-        return this.runtime;
-    }
+    // async sendSignals(){
+
+    // }
 }
 
 const LoadTestDataStoreInstantiationFactory = new DataObjectFactory(
