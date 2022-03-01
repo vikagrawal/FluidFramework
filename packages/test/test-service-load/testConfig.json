@@ -88,7 +88,7 @@
         },
         "custom_scale_with_signals_200": {
             "opRatePerMin": 33.6,
-            "signalToOpRatio": 27, 
+            "signalToOpRatio": 27,
             "progressIntervalMs": 20000,
             "numClients": 200,
             "totalSendCount": 70000,
@@ -96,9 +96,19 @@
             "faultInjectionMinMs": 900000,
             "faultInjectionMaxMs": 1800000
         },
+        "custom_scale_with_signals_50": {
+            "opRatePerMin": 33.6,
+            "signalToOpRatio": 27,
+            "progressIntervalMs": 20000,
+            "numClients": 50,
+            "totalSendCount": 70000,
+            "readWriteCycleMs": 30000,
+            "faultInjectionMinMs": 900000,
+            "faultInjectionMaxMs": 1800000
+        },
         "custom_scale_with_signals_2": {
             "opRatePerMin": 33.6,
-            "signalToOpRatio": 27, 
+            "signalToOpRatio": 27,
             "progressIntervalMs": 20000,
             "numClients": 2,
             "totalSendCount": 70000,
