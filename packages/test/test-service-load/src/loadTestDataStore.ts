@@ -417,21 +417,27 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
         // To set that up we start each client in a staggered way, each will independently go thru write
         // and listen cycles
 
-        const cycleMs = config.testConfig.readWriteCycleMs;
-        let t: NodeJS.Timeout | undefined;
+        let timeout: NodeJS.Timeout | undefined;
         if (config.verbose) {
             const printProgress = () => {
                 dataModel.printStatus();
-                t = setTimeout(printProgress, config.testConfig.progressIntervalMs);
+                timeout = setTimeout(printProgress, config.testConfig.progressIntervalMs);
             };
-            t = setTimeout(printProgress, config.testConfig.progressIntervalMs);
+            timeout = setTimeout(printProgress, config.testConfig.progressIntervalMs);
         }
 
+        const opsRun = this.sendOps(dataModel, config, timeout)
+        const signalsRun = this.sendSignals(config, timeout)
+        const runResult = await Promise.all([opsRun, signalsRun]); //runResult if of type [boolean, void] as we return boolean for Ops alone based on runtime.disposed value
+        return runResult[0];
+    }
+    async getRuntime() {
+        return this.runtime;
+    }
+    async sendOps(dataModel: LoadTestDataStoreModel, config: IRunConfig, timeout: NodeJS.Timeout | undefined){
+        const cycleMs = config.testConfig.readWriteCycleMs;
         const clientSendCount = config.testConfig.totalSendCount / config.testConfig.numClients;
         const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
-        // if signalToOpRatio is unspecified, take the default value as 0. Else, round it up
-        const signalsPerOp: number = (typeof config.testConfig.signalToOpRatio === 'undefined') ? 
-                                         0 : Math.ceil(config.testConfig.signalToOpRatio); 
         const opsGapMs = cycleMs / opsPerCycle;
         try {
             while (dataModel.counter.value < clientSendCount && !this.disposed) {
@@ -442,36 +448,54 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                     && ((await dataModel.getPartnerCounter())?.value ?? 0) >= clientSendCount) {
                     return true;
                 }
-
                 if (dataModel.haveTaskLock()) {
                     dataModel.counter.increment(1);
-                    for (let count = 0; count < signalsPerOp; count++)
-                    {
-                        this.runtime.submitSignal("generic-signal", true)
-                    }
                     if (dataModel.counter.value % opsPerCycle === 0) {
                         await dataModel.blobFinish();
                         dataModel.abandonTask();
                         // give our partner a half cycle to get the task
                         await delay(cycleMs / 2);
-                    } else {
+                    }
+                    else {
                         // Random jitter of +- 50% of opWaitMs
                         await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
                     }
-                } else {
+                }
+                else {
                     await dataModel.lockTask();
                 }
             }
             return !this.runtime.disposed;
-        } finally {
-            if (t !== undefined) {
-                clearTimeout(t);
+        }
+        finally {
+            if (timeout !== undefined) {
+                clearTimeout(timeout);
             }
             dataModel.printStatus();
         }
     }
-    public async getRuntime(){
-        return this.runtime;
+    async sendSignals(config: IRunConfig, timeout: NodeJS.Timeout | undefined){
+        const clientSignalsSendCount = (typeof config.testConfig.totalSignalsSendCount === 'undefined') ? 
+                                        0 : config.testConfig.totalSignalsSendCount / config.testConfig.numClients;
+        const cycleMs = config.testConfig.readWriteCycleMs;
+        const signalsPerCycle = (typeof config.testConfig.signalsPerMin === 'undefined') ? 
+                                 0 : config.testConfig.signalsPerMin * cycleMs / 60000;
+        const signalsGapMs = cycleMs / signalsPerCycle;
+        var submittedSignals = 0;
+        try {
+            while (submittedSignals < clientSignalsSendCount) {
+                // all the clients are sending signals; with signals, there is no particular need to have staggered writers and readers
+                this.runtime.submitSignal("generic-signal", true);
+                submittedSignals++;
+                // Random jitter of +- 50% of signalGapMs
+                await delay(signalsGapMs + signalsGapMs * random.real(0, .5, true)(config.randEng));  
+            }
+        }
+        finally {
+            if (timeout !== undefined) {
+                clearTimeout(timeout);
+            }
+        }
     }
 }
 
