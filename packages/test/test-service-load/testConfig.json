@@ -121,6 +121,17 @@
             "faultInjectionMinMs": 900000,
             "faultInjectionMaxMs": 1800000
         },
+        "scale_with_reduced_signals": {
+            "opRatePerMin": 40.5,
+            "signalsPerMin": 144, 
+            "totalSignalsSendCount": 500500,
+            "progressIntervalMs": 20000,
+            "numClients": 10,
+            "totalSendCount": 70000,
+            "readWriteCycleMs": 30000,
+            "faultInjectionMinMs": 900000,
+            "faultInjectionMaxMs": 1800000
+        },
         "scale_nofault": {
             "opRatePerMin": 60,
             "progressIntervalMs": 20000,
