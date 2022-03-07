@@ -123,7 +123,7 @@
         },
         "scale_with_reduced_signals": {
             "opRatePerMin": 40.5,
-            "signalsPerMin": 144, 
+            "signalsPerMin": 150, 
             "totalSignalsSendCount": 500500,
             "progressIntervalMs": 20000,
             "numClients": 10,

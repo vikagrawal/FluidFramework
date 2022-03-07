@@ -9,6 +9,8 @@ do
 done
 sleep 2s
 cp /fluid-config-store/$FLUID_TEST_UID/${HOSTNAME}_PodConfig.json ./testUserConfig.json
+# copying testConfig.json that was uploaded to the file share; will overwrite the testConfig.json copied from test-service-load directory
+cp /fluid-config-store/$FLUID_TEST_UID/testConfig.json ./testConfig.json
 
 # Wait for test rampup time to avoid all instances starting at once.
 rampupTimeInSeconds=`jq .rampup /app/packages/test/test-service-load/testUserConfig.json`

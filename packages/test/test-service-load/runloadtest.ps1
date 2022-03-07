@@ -16,7 +16,10 @@ function RunLoadTest {
         [string]$TestDocFolder = [Math]::Floor([decimal](Get-Date(Get-Date).ToUniversalTime() -uformat '%s')),
 
         [Parameter(Mandatory = $false, HelpMessage = 'File with tenants and users information.')]
-        [string]$TestTenantConfig = '.\testTenantConfig.json'
+        [string]$TestTenantConfig = '.\testTenantConfig.json',
+
+        [Parameter(Mandatory = $false, HelpMessage = 'File containing various test profiles/configurations')]
+        [string]$TestConfig = '.\testConfig.json'
     )
 
     $TestUid = [guid]::NewGuid()
@@ -114,6 +117,10 @@ function CreateAndUploadConfig{
         Write-Output "Pod configuration created for Pod No: $i, PodName: $PodName"
     }
 
+    $TestProfiles = (Get-Content -Raw -Path $TestConfig | ConvertFrom-Json)
+    $LocalTestProfilePath = (Join-Path -Path $PodConfigPath -ChildPath "testConfig.json")
+    $TestProfiles | ConvertTo-Json | Out-File -Encoding ascii -FilePath $LocalTestProfilePath
+
 	Write-Output "Uploading pod's configuration into the file share: $env:AZURE_STORAGE_ACCOUNT at $(Get-Date)"
 
     az storage directory create --name $TestUid --share-name fluid-config-store
@@ -121,7 +128,7 @@ function CreateAndUploadConfig{
 
     $TestTriggerFile = (Join-Path -Path $PodConfigPath -ChildPath "${TestUid}_Trigger.json")
 	Out-File -FilePath $TestTriggerFile
-	az storage file upload --share-name fluid-config-store --source $TestTriggerFile --path $TestUid
+    az storage file upload --share-name fluid-config-store --source $TestTriggerFile --path $TestUid
 
     Remove-Item -Force -Recurse $PodConfigPath
 }
