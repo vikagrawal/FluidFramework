@@ -117,14 +117,15 @@ function CreateAndUploadConfig{
         Write-Output "Pod configuration created for Pod No: $i, PodName: $PodName"
     }
 
-    $TestProfiles = (Get-Content -Raw -Path $TestConfig | ConvertFrom-Json)
-    $LocalTestProfilePath = (Join-Path -Path $PodConfigPath -ChildPath "testConfig.json")
-    $TestProfiles | ConvertTo-Json | Out-File -Encoding ascii -FilePath $LocalTestProfilePath
-
 	Write-Output "Uploading pod's configuration into the file share: $env:AZURE_STORAGE_ACCOUNT at $(Get-Date)"
 
     az storage directory create --name $TestUid --share-name fluid-config-store
 	az storage file upload-batch --source $PodConfigPath --destination "fluid-config-store/$TestUid" --max-connections 10
+
+    $TestProfiles = (Get-Content -Raw -Path $TestConfig | ConvertFrom-Json)
+    $LocalTestProfilePath = (Join-Path -Path $PodConfigPath -ChildPath "testConfig.json")
+    $TestProfiles | ConvertTo-Json | Out-File -Encoding ascii -FilePath $LocalTestProfilePath
+    az storage file upload --share-name fluid-config-store --source $LocalTestProfilePath --path $TestUid
 
     $TestTriggerFile = (Join-Path -Path $PodConfigPath -ChildPath "${TestUid}_Trigger.json")
 	Out-File -FilePath $TestTriggerFile
