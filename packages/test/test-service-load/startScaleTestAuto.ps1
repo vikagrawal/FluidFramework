@@ -32,7 +32,8 @@ Param(
     [string]$TestTenantConfig = "<TestTenantConfig File Path>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Number of nodes to which the node pool should be scaled')]
-    [string]$NodeCount = '5',
+    [AllowNull()]
+    [string]$NodeCount = $null,
 
     [Parameter(Mandatory = $false, HelpMessage = 'Number of pods per node, to be used in the calculation of NodeCount if not user specified')]
     [int]$NumPodsPerNode = 13,
@@ -116,12 +117,10 @@ az aks start -n $AKSClusterName -g $ResourceGroup
 
 Write-Host "Scaling the Node Pool" -ForegroundColor Green
 # Manually scale the Node Pool as appropriate
-# if ($NodeCount -eq $null)
-# {
-#     $NodeCount_ = ($NumOfDocs/$NumPodsPerNode)
-#     $NodeCount_ = ($NodeCount_ > 0) ? $NodeCount_ : 1
-#     $NodeCount = $NodeCount_.ToString()
-# } 
+if ([string]::IsNullOrEmpty($NodeCount))
+{
+    $NodeCount = [math]::ceiling($NumOfDocs/$NumPodsPerNode)
+}
 $_ScaleNodesJob = { param($nodecount, $resourcegroup, $aksclustername, $nodepoolname) `
                    az aks scale --resource-group $resourcegroup --name $aksclustername `
                    --node-count $nodecount --nodepool-name $nodepoolname 
