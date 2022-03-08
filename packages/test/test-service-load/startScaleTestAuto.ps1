@@ -32,7 +32,7 @@ Param(
     [string]$TestTenantConfig = "<TestTenantConfig File Path>",
 
     [Parameter(Mandatory = $false, HelpMessage = 'Number of nodes to which the node pool should be scaled')]
-    [Nullable[string]]$NodeCount = $null,
+    [string]$NodeCount = '5',
 
     [Parameter(Mandatory = $false, HelpMessage = 'Number of pods per node, to be used in the calculation of NodeCount if not user specified')]
     [int]$NumPodsPerNode = 13,
@@ -116,10 +116,12 @@ az aks start -n $AKSClusterName -g $ResourceGroup
 
 Write-Host "Scaling the Node Pool" -ForegroundColor Green
 # Manually scale the Node Pool as appropriate
-if ($NodeCount -eq $null)
-{
-    $NodeCount = ($NumOfDocs/$NumPodsPerNode).ToString()
-} 
+# if ($NodeCount -eq $null)
+# {
+#     $NodeCount_ = ($NumOfDocs/$NumPodsPerNode)
+#     $NodeCount_ = ($NodeCount_ > 0) ? $NodeCount_ : 1
+#     $NodeCount = $NodeCount_.ToString()
+# } 
 $_ScaleNodesJob = { param($nodecount, $resourcegroup, $aksclustername, $nodepoolname) `
                    az aks scale --resource-group $resourcegroup --name $aksclustername `
                    --node-count $nodecount --nodepool-name $nodepoolname 
@@ -157,5 +159,5 @@ $StartTime = (Get-Date -Format "yyyy-MM-ddTHH:mm").ToString()
 Write-Host "Re-Triggering Load Test" -ForegroundColor Green
 # Modify $OutFile as appropriate to point to the location where you want to save the output of `RunLoadTest`
 $OutFile = (Get-Location).ToString() +"\out\" + (Get-Date -Format "dddd MM_dd_yyyy HH_mm").ToString() + ".txt"
-RunLoadTest -Profile $Profile -NumOfDocs $NumOfDocs -TestTenantConfig $TestTenantConfig `
+RunLoadTest -TestProfile $Profile -NumOfDocs $NumOfDocs -TestTenantConfig $TestTenantConfig `
             | Out-File -FilePath $OutFile
