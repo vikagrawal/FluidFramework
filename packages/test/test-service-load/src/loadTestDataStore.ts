@@ -481,7 +481,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
         else if(opsSendType === 'allClientsConcurrentReadWrite')
         {
             try {
-                const opsPerCycle = config.testConfig.opRatePerMin;
+                const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
                 const opsGapMs = cycleMs / opsPerCycle;
                 while (dataModel.counter.value < clientSendCount) {
                     dataModel.counter.increment(1);
