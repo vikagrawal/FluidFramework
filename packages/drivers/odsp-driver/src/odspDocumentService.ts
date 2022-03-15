@@ -33,6 +33,7 @@ import {
     InstrumentedStorageTokenFetcher,
     OdspErrorType,
 } from "@fluidframework/odsp-driver-definitions";
+import type { io as SocketIOClientStatic } from "socket.io-client";
 import { HostStoragePolicyInternal, ISocketStorageDiscovery } from "./contracts";
 import { IOdspCache } from "./odspCache";
 import { OdspDeltaStorageService, OdspDeltaStorageWithCache } from "./odspDeltaStorageService";
@@ -73,7 +74,7 @@ export class OdspDocumentService implements IDocumentService {
         getStorageToken: InstrumentedStorageTokenFetcher,
         getWebsocketToken: ((options: TokenFetchOptions) => Promise<string | null>) | undefined,
         logger: ITelemetryLogger,
-        socketIoClientFactory: () => Promise<SocketIOClientStatic>,
+        socketIoClientFactory: () => Promise<typeof SocketIOClientStatic>,
         cache: IOdspCache,
         hostPolicy: HostStoragePolicy,
         epochTracker: EpochTracker,
@@ -123,7 +124,7 @@ export class OdspDocumentService implements IDocumentService {
         private readonly getStorageToken: InstrumentedStorageTokenFetcher,
         private readonly getWebsocketToken: ((options: TokenFetchOptions) => Promise<string | null>) | undefined,
         logger: ITelemetryLogger,
-        private readonly socketIoClientFactory: () => Promise<SocketIOClientStatic>,
+        private readonly socketIoClientFactory: () => Promise<typeof SocketIOClientStatic>,
         private readonly cache: IOdspCache,
         hostPolicy: HostStoragePolicy,
         private readonly epochTracker: EpochTracker,
@@ -357,16 +358,16 @@ export class OdspDocumentService implements IDocumentService {
         };
 
         const getResponseAndRefreshAfterDeltaMs = async () => {
-            let response = await this.cache.sessionJoinCache.addOrGet(this.joinSessionKey, executeFetch);
+            let _response = await this.cache.sessionJoinCache.addOrGet(this.joinSessionKey, executeFetch);
             // If the response does not contain refreshSessionDurationSeconds, then treat it as old flow and let the
             // cache entry to be treated as expired after 1 hour.
-            response.joinSessionResponse.refreshSessionDurationSeconds =
-                response.joinSessionResponse.refreshSessionDurationSeconds ?? 3600;
+            _response.joinSessionResponse.refreshSessionDurationSeconds =
+                _response.joinSessionResponse.refreshSessionDurationSeconds ?? 3600;
             return {
-                ...response,
+                ..._response,
                 refreshAfterDeltaMs: this.calculateJoinSessionRefreshDelta(
-                    response.entryTime, response.joinSessionResponse.refreshSessionDurationSeconds),
-            }
+                    _response.entryTime, _response.joinSessionResponse.refreshSessionDurationSeconds),
+            };
         };
         let response = await getResponseAndRefreshAfterDeltaMs();
         // This means that the cached entry has expired(This should not be possible if the response is fetched
@@ -390,8 +391,8 @@ export class OdspDocumentService implements IDocumentService {
                                 ...props,
                             },
                             error,
-                        )
-                    });;
+                        );
+                    });
             } else {
                 // Logging just for informational purposes to help with debugging as this is a new feature.
                 this.mc.logger.sendErrorEvent({
@@ -423,7 +424,7 @@ export class OdspDocumentService implements IDocumentService {
         tenantId: string,
         documentId: string,
         token: string | null,
-        io: SocketIOClientStatic,
+        io: typeof SocketIOClientStatic,
         client: IClient,
         webSocketUrl: string,
     ): Promise<OdspDocumentDeltaConnection> {
