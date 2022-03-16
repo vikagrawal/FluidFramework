@@ -1,5 +1,3 @@
-# Copy config file
-
 Param(
     [Parameter(Mandatory = $false, HelpMessage = 'Number of documents to run test on.')]
     [ValidateRange(1, 2400)]
@@ -40,7 +38,11 @@ Param(
     [Nullable[System.Int32]]$faultInjectionMaxMs = $null,
 
     [Parameter(Mandatory = $false, HelpMessage = 'Test Config File Path')]
-    [string]$TestConfigFilePath = './testConfig.json'
+    [string]$TestConfigFilePath = './testConfig.json',
+
+    [Parameter(Mandatory = $false, HelpMessage = 'Specify operations send type mechanism')]
+    [AllowNull()]
+    [string]$opsSendType = $null
 )        
 
 $TestConfig = (get-Content -Path $TestConfigFilePath | ConvertFrom-Json)

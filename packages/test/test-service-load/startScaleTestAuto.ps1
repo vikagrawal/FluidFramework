@@ -89,7 +89,11 @@ Param(
     [Nullable[System.Int32]]$FaultInjectionMaxMs = $null,
 
     [Parameter(Mandatory = $false, HelpMessage = 'Test Config File Path')]
-    [string]$TestConfigFilePath = './testConfig.json'
+    [string]$TestConfigFilePath = './testConfig.json',
+
+    [Parameter(Mandatory = $false, HelpMessage = 'Specify operations send type mechanism')]
+    [AllowNull()]
+    [string]$OpsSendType = 'staggeredReadWrite'
 )
 
 # Make sure this points to the right directory in your local setup (wherever the load test scripts are present)
@@ -102,7 +106,7 @@ if ($CreateCustomProfile -eq $true)
                             -totalSignalsSendCount $TotalSignalsSendCount -progressIntervalMs $ProgressIntervalMs `
                             -numClients $NumClients -totalSendCount $TotalOpsSendCount -readWriteCycleMs $ReadWriteCycleMs `
                             -faultInjectionMinMs $FaultInjectionMinMs -faultInjectionMaxMs $FaultInjectionMaxMs `
-                            -TestConfigFilePath $TestConfigFilePath
+                            -opsSendType $OpsSendType -TestConfigFilePath $TestConfigFilePath
 }
 
 Write-Host "Logging in to the AKS portal" -ForegroundColor Green
