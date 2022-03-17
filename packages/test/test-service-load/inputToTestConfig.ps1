@@ -71,4 +71,4 @@ foreach ($Parameter in $ParameterList) {
 }
 $TestConfig.profiles | Add-Member -MemberType NoteProperty `
                       -Name $TestProfile -Value $ProfileContent -Force
-ConvertTo-Json -InputObject $TestConfig | Out-File -FilePath $TestConfigFilePath
+ConvertTo-Json -InputObject $TestConfig | Out-File -FilePath $TestConfigFilePath -Encoding ascii 
