@@ -224,6 +224,8 @@ const getCodeProposal =
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     (quorum: IQuorumProposals) => quorum.get("code") ?? quorum.get("code2");
 
+const summarizerClientType = "summarizer";
+
 export class Container extends EventEmitterWithErrorHandling<IContainerEvents> implements IContainer {
     public static version = "^0.1.0";
 
@@ -818,11 +820,14 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
                 const createNewResolvedUrl = await this.urlResolver.resolve(request);
                 ensureFluidResolvedUrl(createNewResolvedUrl);
                 if (this.service === undefined) {
+                    assert(this.client.details.type !== summarizerClientType,
+                        "client should not be summarizer before container is created");
                     this.service = await runWithRetry(
                         async () => this.serviceFactory.createContainer(
                             summary,
                             createNewResolvedUrl,
                             this.subLogger,
+                            false, // clientIsSummarizer
                         ),
                         "containerAttach",
                         this.mc.logger,
@@ -958,21 +963,6 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
         this.connectToDeltaStream(args);
     }
 
-    /**
-     * @deprecated 0.56, will be removed in next release from IContainerContext
-     * Raise non-critical error to host. Calling this API will not close container.
-     * For critical errors, please call Container.close(error).
-     * @param error - an error to raise
-     */
-    public raiseContainerWarning(warning: ContainerWarning) {
-        // Some "warning" events come from outside the container and are logged
-        // elsewhere (e.g. summarizing container). We shouldn't log these here.
-        if (warning.logged !== true) {
-            this.logContainerError(warning);
-        }
-        this.emit("warning", warning);
-    }
-
     public async getAbsoluteUrl(relativeUrl: string): Promise<string | undefined> {
         if (this.resolvedUrl === undefined) {
             return undefined;
@@ -1057,7 +1047,11 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
         if (this._resolvedUrl === undefined) {
             throw new Error("Attempting to load without a resolved url");
         }
-        this.service = await this.serviceFactory.createDocumentService(this._resolvedUrl, this.subLogger);
+        this.service = await this.serviceFactory.createDocumentService(
+            this._resolvedUrl,
+            this.subLogger,
+            this.client.details.type === summarizerClientType,
+        );
 
         // Ideally we always connect as "read" by default.
         // Currently that works with SPO & r11s, because we get "write" connection when connecting to non-existing file.
@@ -1482,7 +1476,13 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
         });
 
         deltaManager.on("throttled", (warning: IThrottlingWarning) => {
-            this.raiseContainerWarning(warning);
+            let warn = warning as ContainerWarning;
+            // Some "warning" events come from outside the container and are logged
+            // elsewhere (e.g. summarizing container). We shouldn't log these here.
+            if (warn.logged !== true) {
+                this.logContainerError(warn);
+            }
+            this.emit("warning", warn);
         });
 
         deltaManager.on("readonly", (readonly) => {
@@ -1755,7 +1755,6 @@ export class Container extends EventEmitterWithErrorHandling<IContainerEvents> i
             new DeltaManagerProxy(this._deltaManager),
             new QuorumProxy(this.protocolHandler.quorum),
             loader,
-            (warning: ContainerWarning) => this.raiseContainerWarning(warning),
             (type, contents, batch, metadata) => this.submitContainerMessage(type, contents, batch, metadata),
             (message) => this.submitSignal(message),
             (error?: ICriticalContainerError) => this.close(error),
