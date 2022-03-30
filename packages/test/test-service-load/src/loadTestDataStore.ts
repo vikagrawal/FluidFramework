@@ -20,8 +20,6 @@ import { delay, assert } from "@fluidframework/common-utils";
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
 import { ILoadTestConfig } from "./testConfigFile";
 import { LeaderElection } from "./leaderElection";
-const { generateGUID } = require('@fluid-experimental/property-common').GuidUtils;
-
 export interface IRunConfig {
     runId: number,
     testConfig: ILoadTestConfig,
@@ -495,7 +493,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                     while (opsSent < clientSendCount) {
                         if (dataModel.haveTaskLock()) {
                             var opPayload = generateStringOfSize(opSizeinBytes);
-                            var opKey = generateGUID();
+                            var opKey = Math.random().toString()
                             dataModel.sharedmap.set(opKey, opPayload);
                             opsSent++;
                             if (opsSent % opsPerCycle === 0) {
@@ -537,7 +535,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                 else {
                     while (opsSent < clientSendCount) {
                         var opPayload = generateStringOfSize(opSizeinBytes);
-                        var opKey = generateGUID();
+                        var opKey = Math.random().toString()
                         dataModel.sharedmap.set(opKey, opPayload);
                         opsSent++;
                         await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
