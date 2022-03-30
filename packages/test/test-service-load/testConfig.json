@@ -1,155 +1,179 @@
 {
-    "profiles": {
-        "ci": {
-            "opRatePerMin": 10,
-            "progressIntervalMs": 15000,
-            "numClients": 120,
-            "totalSendCount": 10000,
-            "totalBlobCount": 480,
-            "blobSize": 256,
-            "readWriteCycleMs": 30000,
-            "faultInjectionMinMs": 0,
-            "faultInjectionMaxMs": 150000,
-            "optionOverrides":{
-                "odsp":{
-                    "loader":{
-                        "summarizeProtocolTree": [true,false]
-                    }
-                }
-            }
-        },
-        "full": {
-            "opRatePerMin": 1920,
-            "progressIntervalMs": 1500000,
-            "numClients": 60,
-            "totalSendCount": 200000,
-            "readWriteCycleMs": 30000,
-            "faultInjectionMinMs": 0,
-            "faultInjectionMaxMs": 150000
-        },
-        "mini": {
-            "opRatePerMin": 60,
-            "progressIntervalMs": 5000,
-            "numClients": 2,
-            "totalSendCount": 30,
-            "readWriteCycleMs": 10000,
-            "faultInjectionMinMs": 0,
-            "faultInjectionMaxMs": 50000,
-            "optionOverrides":{
-                "odsp":{
-                    "loader":{
-                        "summarizeProtocolTree": [true,false]
-                    }
-                }
-            }
-        },
-        "debug": {
-            "opRatePerMin": 60,
-            "progressIntervalMs": 5000,
-            "numClients": 1,
-            "totalSendCount": 30,
-            "readWriteCycleMs": 10000,
-            "faultInjectionMinMs": 0,
-            "faultInjectionMaxMs": 50000
-        },
-        "debug_signals_nofault": {
-            "opRatePerMin": 40.5,
-            "signalsPerMin": 568.5,
-            "totalSignalsSendCount": 81000,
-            "progressIntervalMs": 5000,
-            "numClients": 2,
-            "totalSendCount": 3000,
-            "readWriteCycleMs": 10000
-        },
-        "ci_nofault": {
-            "opRatePerMin": 10,
-            "progressIntervalMs": 15000,
-            "numClients": 120,
-            "totalSendCount": 10000,
-            "readWriteCycleMs": 30000
-        },
-        "scale": {
-            "opRatePerMin": 60, 
-            "progressIntervalMs": 20000,
-            "numClients": 10,
-            "totalSendCount": 70000,
-            "readWriteCycleMs": 30000,
-            "faultInjectionMinMs": 900000,
-            "faultInjectionMaxMs": 1800000
-        },
-        "scale_with_signals": {
-            "opRatePerMin": 40.5,
-            "signalsPerMin": 568.5, 
-            "totalSignalsSendCount": 1890000,
-            "progressIntervalMs": 20000,
-            "numClients": 10,
-            "totalSendCount": 70000,
-            "readWriteCycleMs": 30000,
-            "faultInjectionMinMs": 900000,
-            "faultInjectionMaxMs": 1800000
-        },
-        "custom_scale_with_signals_200": {
-            "opRatePerMin": 40.5,
-            "signalsPerMin": 568.5, 
-            "totalSignalsSendCount": 1890000,
-            "progressIntervalMs": 20000,
-            "numClients": 200,
-            "totalSendCount": 70000,
-            "readWriteCycleMs": 30000,
-            "faultInjectionMinMs": 900000,
-            "faultInjectionMaxMs": 1800000
-        },
-        "custom_scale_with_signals_50": {
-            "opRatePerMin": 40.5,
-            "signalsPerMin": 568.5, 
-            "totalSignalsSendCount": 1890000,
-            "progressIntervalMs": 20000,
-            "numClients": 50,
-            "totalSendCount": 70000,
-            "readWriteCycleMs": 30000,
-            "faultInjectionMinMs": 900000,
-            "faultInjectionMaxMs": 1800000
-        },
-        "custom_scale_with_signals_2": {
-            "opRatePerMin": 40.5,
-            "signalsPerMin": 568.5, 
-            "totalSignalsSendCount": 1890000,
-            "progressIntervalMs": 20000,
-            "numClients": 2,
-            "totalSendCount": 70000,
-            "readWriteCycleMs": 30000,
-            "faultInjectionMinMs": 900000,
-            "faultInjectionMaxMs": 1800000
-        },
-        "scale_with_reduced_signals": {
-            "opRatePerMin": 40.5,
-            "signalsPerMin": 150, 
-            "totalSignalsSendCount": 500500,
-            "progressIntervalMs": 20000,
-            "numClients": 10,
-            "totalSendCount": 70000,
-            "readWriteCycleMs": 30000,
-            "faultInjectionMinMs": 900000,
-            "faultInjectionMaxMs": 1800000
-        },
-        "scale_nofault": {
-            "opRatePerMin": 60,
-            "progressIntervalMs": 20000,
-            "numClients": 10,
-            "totalSendCount": 70000,
-            "readWriteCycleMs": 30000
-        },
-        "blobs": {
-            "opRatePerMin": 60,
-            "progressIntervalMs": 5000,
-            "numClients": 4,
-            "totalSendCount": 150,
-            "readWriteCycleMs": 10000,
-            "faultInjectionMinMs": 0,
-            "faultInjectionMaxMs": 50000,
-            "totalBlobCount": 300,
-            "blobSize": 10240,
-            "detachedBlobCount": 10
-        }
-    }
+    "profiles":  {
+                     "ci":  {
+                                "opRatePerMin":  10,
+                                "progressIntervalMs":  15000,
+                                "numClients":  120,
+                                "totalSendCount":  10000,
+                                "totalBlobCount":  480,
+                                "blobSize":  256,
+                                "readWriteCycleMs":  30000,
+                                "faultInjectionMinMs":  0,
+                                "faultInjectionMaxMs":  150000,
+                                "optionOverrides":  "@{odsp=}"
+                            },
+                     "full":  {
+                                  "opRatePerMin":  1920,
+                                  "progressIntervalMs":  1500000,
+                                  "numClients":  60,
+                                  "totalSendCount":  200000,
+                                  "readWriteCycleMs":  30000,
+                                  "faultInjectionMinMs":  0,
+                                  "faultInjectionMaxMs":  150000
+                              },
+                     "mini":  {
+                                  "opRatePerMin":  60,
+                                  "progressIntervalMs":  5000,
+                                  "numClients":  2,
+                                  "totalSendCount":  30,
+                                  "readWriteCycleMs":  10000,
+                                  "faultInjectionMinMs":  0,
+                                  "faultInjectionMaxMs":  50000,
+                                  "optionOverrides":  "@{odsp=}"
+                              },
+                     "debug":  {
+                                   "opRatePerMin":  60,
+                                   "progressIntervalMs":  5000,
+                                   "numClients":  1,
+                                   "totalSendCount":  30,
+                                   "readWriteCycleMs":  10000,
+                                   "faultInjectionMinMs":  0,
+                                   "faultInjectionMaxMs":  50000
+                               },
+                     "debug_signals_nofault":  {
+                                                   "opRatePerMin":  40.5,
+                                                   "signalsPerMin":  568.5,
+                                                   "totalSignalsSendCount":  81000,
+                                                   "progressIntervalMs":  5000,
+                                                   "numClients":  2,
+                                                   "totalSendCount":  3000,
+                                                   "readWriteCycleMs":  10000
+                                               },
+                     "ci_nofault":  {
+                                        "opRatePerMin":  10,
+                                        "progressIntervalMs":  15000,
+                                        "numClients":  120,
+                                        "totalSendCount":  10000,
+                                        "readWriteCycleMs":  30000
+                                    },
+                     "scale":  {
+                                   "opRatePerMin":  60,
+                                   "progressIntervalMs":  20000,
+                                   "numClients":  10,
+                                   "totalSendCount":  70000,
+                                   "readWriteCycleMs":  30000,
+                                   "faultInjectionMinMs":  900000,
+                                   "faultInjectionMaxMs":  1800000
+                               },
+                     "scale_with_signals":  {
+                                                "opRatePerMin":  40.5,
+                                                "signalsPerMin":  568.5,
+                                                "totalSignalsSendCount":  1890000,
+                                                "progressIntervalMs":  20000,
+                                                "numClients":  10,
+                                                "totalSendCount":  70000,
+                                                "readWriteCycleMs":  30000,
+                                                "faultInjectionMinMs":  900000,
+                                                "faultInjectionMaxMs":  1800000
+                                            },
+                     "custom_scale_with_signals_200":  {
+                                                           "opRatePerMin":  40.5,
+                                                           "signalsPerMin":  568.5,
+                                                           "totalSignalsSendCount":  1890000,
+                                                           "progressIntervalMs":  20000,
+                                                           "numClients":  200,
+                                                           "totalSendCount":  70000,
+                                                           "readWriteCycleMs":  30000,
+                                                           "faultInjectionMinMs":  900000,
+                                                           "faultInjectionMaxMs":  1800000
+                                                       },
+                     "custom_scale_with_signals_50":  {
+                                                          "opRatePerMin":  40.5,
+                                                          "signalsPerMin":  568.5,
+                                                          "totalSignalsSendCount":  1890000,
+                                                          "progressIntervalMs":  20000,
+                                                          "numClients":  50,
+                                                          "totalSendCount":  70000,
+                                                          "readWriteCycleMs":  30000,
+                                                          "faultInjectionMinMs":  900000,
+                                                          "faultInjectionMaxMs":  1800000
+                                                      },
+                     "custom_scale_with_signals_2":  {
+                                                         "opRatePerMin":  40.5,
+                                                         "signalsPerMin":  568.5,
+                                                         "totalSignalsSendCount":  1890000,
+                                                         "progressIntervalMs":  20000,
+                                                         "numClients":  2,
+                                                         "totalSendCount":  70000,
+                                                         "readWriteCycleMs":  30000,
+                                                         "faultInjectionMinMs":  900000,
+                                                         "faultInjectionMaxMs":  1800000
+                                                     },
+                     "scale_with_reduced_signals":  {
+                                                        "opRatePerMin":  40.5,
+                                                        "signalsPerMin":  150,
+                                                        "totalSignalsSendCount":  500500,
+                                                        "progressIntervalMs":  20000,
+                                                        "numClients":  10,
+                                                        "totalSendCount":  70000,
+                                                        "readWriteCycleMs":  30000,
+                                                        "faultInjectionMinMs":  900000,
+                                                        "faultInjectionMaxMs":  1800000
+                                                    },
+                     "scale_nofault":  {
+                                           "opRatePerMin":  60,
+                                           "progressIntervalMs":  20000,
+                                           "numClients":  10,
+                                           "totalSendCount":  70000,
+                                           "readWriteCycleMs":  30000
+                                       },
+                     "blobs":  {
+                                   "opRatePerMin":  60,
+                                   "progressIntervalMs":  5000,
+                                   "numClients":  4,
+                                   "totalSendCount":  150,
+                                   "readWriteCycleMs":  10000,
+                                   "faultInjectionMinMs":  0,
+                                   "faultInjectionMaxMs":  50000,
+                                   "totalBlobCount":  300,
+                                   "blobSize":  10240,
+                                   "detachedBlobCount":  10
+                               },
+                     "custom_profile":  {
+                                            "opRatePerMin":  12,
+                                            "signalsPerMin":  46,
+                                            "totalSignalsSendCount":  420000,
+                                            "progressIntervalMs":  20000,
+                                            "numClients":  10,
+                                            "totalSendCount":  70000,
+                                            "readWriteCycleMs":  30000,
+                                            "faultInjectionMinMs":  900000,
+                                            "faultInjectionMaxMs":  1800000
+                                        },
+                     "custom_profile_6":  {
+                                              "opRatePerMin":  7,
+                                              "signalsPerMin":  46,
+                                              "totalSignalsSendCount":  420000,
+                                              "progressIntervalMs":  20000,
+                                              "numClients":  10,
+                                              "totalSendCount":  70000,
+                                              "readWriteCycleMs":  30000,
+                                              "faultInjectionMinMs":  900000,
+                                              "faultInjectionMaxMs":  1800000,
+                                              "opsSendType":  "allClientsConcurrentReadWrite"
+                                          },
+                    "custom_profile_size":  {
+                                            "opRatePerMin":  7,
+                                            "signalsPerMin":  46,
+                                            "totalSignalsSendCount":  420000,
+                                            "progressIntervalMs":  20000,
+                                            "numClients":  10,
+                                            "totalSendCount":  70000,
+                                            "readWriteCycleMs":  30000,
+                                            "faultInjectionMinMs":  900000,
+                                            "faultInjectionMaxMs":  1800000,
+                                            "opsSendType":  "allClientsConcurrentReadWrite",
+                                            "opSizeinBytes": 4
+                                        }                   
+                 }
 }

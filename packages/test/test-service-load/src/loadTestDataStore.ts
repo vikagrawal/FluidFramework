@@ -11,7 +11,7 @@ import {
 import { IFluidHandle, IRequest } from "@fluidframework/core-interfaces";
 import { ISharedCounter, SharedCounter } from "@fluidframework/counter";
 import { ITaskManager, TaskManager } from "@fluid-experimental/task-manager";
-import { IDirectory, ISharedDirectory } from "@fluidframework/map";
+import { IDirectory, ISharedDirectory,  ISharedMap, SharedMap } from "@fluidframework/map";
 import { IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
 import random from "random-js";
 import { IContainerRuntimeOptions } from "@fluidframework/container-runtime";
@@ -20,6 +20,7 @@ import { delay, assert } from "@fluidframework/common-utils";
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
 import { ILoadTestConfig } from "./testConfigFile";
 import { LeaderElection } from "./leaderElection";
+const { generateGUID } = require('@fluid-experimental/property-common').GuidUtils;
 
 export interface IRunConfig {
     runId: number,
@@ -36,6 +37,7 @@ export interface ILoadTest {
 
 const taskManagerKey = "taskManager";
 const counterKey = "counter";
+const sharedMapKey = "sharedMap";
 const startTimeKey = "startTime";
 const taskTimeKey = "taskTime";
 const gcDataStoreKey = "dataStore";
@@ -150,14 +152,23 @@ export class LoadTestDataStoreModel {
             runDir.set(counterKey, SharedCounter.create(runtime).handle);
             runDir.set(startTimeKey, Date.now());
         }
+
+        if (!runDir.has(sharedMapKey)) {
+            runDir.set(sharedMapKey, SharedMap.create(runtime).handle);
+        }
+
         const counter = await runDir.get<IFluidHandle<ISharedCounter>>(counterKey)?.get();
         const taskmanager = await root.get<IFluidHandle<ITaskManager>>(taskManagerKey)?.get();
+        const sharedmap = await root.get<IFluidHandle<ISharedMap>>(sharedMapKey)?.get();
 
         if (counter === undefined) {
             throw new Error("counter not available");
         }
         if (taskmanager === undefined) {
             throw new Error("taskmanager not available");
+        }
+        if (sharedmap === undefined) {
+            throw new Error("sharedmap not available");
         }
 
         const gcDataStore = await this.getGCDataStore(config, root, containerRuntime);
@@ -169,6 +180,7 @@ export class LoadTestDataStoreModel {
             taskmanager,
             runDir,
             counter,
+            sharedmap,
             runDir,
             gcDataStore.handle,
         );
@@ -201,6 +213,7 @@ export class LoadTestDataStoreModel {
         private readonly taskManager: ITaskManager,
         private readonly dir: IDirectory,
         public readonly counter: ISharedCounter,
+        public readonly sharedmap: ISharedMap,
         private readonly runDir: IDirectory,
         private readonly gcDataStoreHandle: IFluidHandle,
     ) {
@@ -439,36 +452,66 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
         const clientSendCount = config.testConfig.totalSendCount / config.testConfig.numClients;
         const opsSendType = (typeof config.testConfig.opsSendType === 'undefined') ? 
         'staggeredReadWrite' : config.testConfig.opsSendType; 
+        const opSizeinBytes = (typeof config.testConfig.opSizeinBytes === 'undefined') ? 
+        0 : config.testConfig.opSizeinBytes;
+        assert(opSizeinBytes >= 0, "opSizeinBytes must be greater than or equal to zero.");
+        const generateStringOfSize = (sizeInBytes: number): string => new Array(sizeInBytes + 1).join("0");
+        var opsSent = 0;
         if (opsSendType === 'staggeredReadWrite')
         {
             const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
             const opsGapMs = cycleMs / opsPerCycle;
             try {
-                while (dataModel.counter.value < clientSendCount && !this.disposed) {
-                    // this enables a quick ramp down. due to restart, some clients can lag
-                    // leading to a slow ramp down. so if there are less than half the clients
-                    // and it's partner is done, return true to complete the runner.
-                    if (this.runtime.getAudience().getMembers().size < config.testConfig.numClients / 2
-                        && ((await dataModel.getPartnerCounter())?.value ?? 0) >= clientSendCount) {
-                        return true;
-                    }
-                    if (dataModel.haveTaskLock()) {
-                        dataModel.counter.increment(1);
-                        if (dataModel.counter.value % opsPerCycle === 0) {
-                            await dataModel.blobFinish();
-                            dataModel.abandonTask();
-                            // give our partner a half cycle to get the task
-                            await delay(cycleMs / 2);
+                if (opSizeinBytes === 0)
+                {
+                    while (dataModel.counter.value < clientSendCount && !this.disposed) {
+                        // this enables a quick ramp down. due to restart, some clients can lag
+                        // leading to a slow ramp down. so if there are less than half the clients
+                        // and it's partner is done, return true to complete the runner.
+                        if (this.runtime.getAudience().getMembers().size < config.testConfig.numClients / 2
+                            && ((await dataModel.getPartnerCounter())?.value ?? 0) >= clientSendCount) {
+                            return true;
+                        }
+                        if (dataModel.haveTaskLock()) {
+                            dataModel.counter.increment(1);
+                            opsSent = dataModel.counter.value;
+                            if (opsSent % opsPerCycle === 0) {
+                                await dataModel.blobFinish();
+                                dataModel.abandonTask();
+                                // give our partner a half cycle to get the task
+                                await delay(cycleMs / 2);
+                            }
+                            else {
+                                // Random jitter of +- 50% of opWaitMs
+                                await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
+                            }
                         }
                         else {
-                            // Random jitter of +- 50% of opWaitMs
-                            await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
+                            await dataModel.lockTask();
                         }
                     }
-                    else {
-                        await dataModel.lockTask();
+                }
+                else {
+                    while (opsSent < clientSendCount) {
+                        if (dataModel.haveTaskLock()) {
+                            var opPayload = generateStringOfSize(opSizeinBytes);
+                            var opKey = generateGUID();
+                            dataModel.sharedmap.set(opKey, opPayload);
+                            opsSent++;
+                            if (opsSent % opsPerCycle === 0) {
+                                dataModel.abandonTask();
+                                await delay(cycleMs / 2);
+                            }
+                            else {
+                                await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
+                            }
+                        }
+                        else {
+                            await dataModel.lockTask();
+                        }
                     }
                 }
+
                 return !this.runtime.disposed;
             }
             finally {
@@ -483,10 +526,22 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
             try {
                 const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
                 const opsGapMs = cycleMs / opsPerCycle;
-                while (dataModel.counter.value < clientSendCount) {
-                    dataModel.counter.increment(1);
-                    // Random jitter of +- 50% of opWaitMs
-                    await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));  
+                if (opSizeinBytes === 0)
+                {
+                    while (dataModel.counter.value < clientSendCount) {
+                        dataModel.counter.increment(1);
+                        // Random jitter of +- 50% of opWaitMs
+                        await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));  
+                    }
+                }
+                else {
+                    while (opsSent < clientSendCount) {
+                        var opPayload = generateStringOfSize(opSizeinBytes);
+                        var opKey = generateGUID();
+                        dataModel.sharedmap.set(opKey, opPayload);
+                        opsSent++;
+                        await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
+                    }
                 }
                 return true;
             }
@@ -497,8 +552,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                 dataModel.printStatus();
             }
         }
-        else 
-        {
+        else {
             console.log(`${opsSendType} is not a supported opsSendType`)
             return false;
         }
