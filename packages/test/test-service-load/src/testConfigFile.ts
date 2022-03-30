@@ -25,6 +25,7 @@ export interface ILoadTestConfig {
     faultInjectionMaxMs?: number,
     faultInjectionMinMs?: number,
     opsSendType?: string,
+    opSizeinBytes? : number,
     /**
      * Number of "attachment" type blobs to upload over the course of the test run.
      */
