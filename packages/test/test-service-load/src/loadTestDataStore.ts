@@ -165,9 +165,9 @@ export class LoadTestDataStoreModel {
         if (taskmanager === undefined) {
             throw new Error("taskmanager not available");
         }
-        if (sharedmap === undefined) {
-            throw new Error("sharedmap not available");
-        }
+        // if (sharedmap === undefined) {
+        //     throw new Error("sharedmap not available");
+        // }
 
         const gcDataStore = await this.getGCDataStore(config, root, containerRuntime);
 
