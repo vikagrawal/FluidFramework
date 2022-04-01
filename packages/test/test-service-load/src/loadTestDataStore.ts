@@ -439,7 +439,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
 
         const opsRun = this.sendOps(dataModel, config, timeout)
         const signalsRun = this.sendSignals(config, timeout)
-        const runResult = await Promise.all([opsRun, signalsRun]); //runResult if of type [boolean, void] as we return boolean for Ops alone based on runtime.disposed value
+        const runResult = await Promise.all([opsRun, signalsRun]); //runResult is of type [boolean, void] as we return boolean for Ops alone based on runtime.disposed value
         return runResult[0];
     }
     async getRuntime() {
