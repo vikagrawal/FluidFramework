@@ -12,7 +12,7 @@ import { IFluidHandle, IRequest } from "@fluidframework/core-interfaces";
 import { ISharedCounter, SharedCounter } from "@fluidframework/counter";
 import { ITaskManager, TaskManager } from "@fluid-experimental/task-manager";
 import { IDirectory, ISharedDirectory} from "@fluidframework/map";
-//import { ISharedMap, SharedMap } from "@fluidframework/map";
+import { ISharedMap, SharedMap } from "@fluidframework/map";
 import { IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
 import random from "random-js";
 import { IContainerRuntimeOptions } from "@fluidframework/container-runtime";
@@ -36,7 +36,7 @@ export interface ILoadTest {
 
 const taskManagerKey = "taskManager";
 const counterKey = "counter";
-//const sharedMapKey = "sharedMap";
+const sharedMapKey = "sharedMap";
 const startTimeKey = "startTime";
 const taskTimeKey = "taskTime";
 const gcDataStoreKey = "dataStore";
@@ -152,13 +152,13 @@ export class LoadTestDataStoreModel {
             runDir.set(startTimeKey, Date.now());
         }
 
-        // if (!runDir.has(sharedMapKey)) {
-        //     runDir.set(sharedMapKey, SharedMap.create(runtime).handle);
-        // }
+        if (!runDir.has(sharedMapKey)) {
+            runDir.set(sharedMapKey, SharedMap.create(runtime).handle);
+        }
 
         const counter = await runDir.get<IFluidHandle<ISharedCounter>>(counterKey)?.get();
         const taskmanager = await root.get<IFluidHandle<ITaskManager>>(taskManagerKey)?.get();
-        //const sharedmap = await root.get<IFluidHandle<ISharedMap>>(sharedMapKey)?.get();
+        const sharedmap = await runDir.get<IFluidHandle<ISharedMap>>(sharedMapKey)?.get();
 
         if (counter === undefined) {
             throw new Error("counter not available");
@@ -166,9 +166,9 @@ export class LoadTestDataStoreModel {
         if (taskmanager === undefined) {
             throw new Error("taskmanager not available");
         }
-        // if (sharedmap === undefined) {
-        //     throw new Error("sharedmap not available");
-        // }
+        if (sharedmap === undefined) {
+            throw new Error("sharedmap not available");
+        }
 
         const gcDataStore = await this.getGCDataStore(config, root, containerRuntime);
 
@@ -181,7 +181,7 @@ export class LoadTestDataStoreModel {
             counter,
             runDir,
             gcDataStore.handle,
-            //sharedmap,
+            sharedmap,
         );
 
         if (reset) {
@@ -214,7 +214,7 @@ export class LoadTestDataStoreModel {
         public readonly counter: ISharedCounter,
         private readonly runDir: IDirectory,
         private readonly gcDataStoreHandle: IFluidHandle,
-        //public readonly sharedmap?: ISharedMap
+        public readonly sharedmap?: ISharedMap
     ) {
         const halfClients = Math.floor(this.config.testConfig.numClients / 2);
         // The runners are paired up and each pair shares a single taskId
@@ -454,7 +454,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
         const opSizeinBytes = (typeof config.testConfig.opSizeinBytes === 'undefined') ? 
         0 : config.testConfig.opSizeinBytes;
         assert(opSizeinBytes >= 0, "opSizeinBytes must be greater than or equal to zero.");
-        //const generateStringOfSize = (sizeInBytes: number): string => new Array(sizeInBytes + 1).join("0");
+        const generateStringOfSize = (sizeInBytes: number): string => new Array(sizeInBytes + 1).join("0");
         var opsSent = 0;
         if (opsSendType === 'staggeredReadWrite')
         {
@@ -493,9 +493,13 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                 else {
                     while (opsSent < clientSendCount) {
                         if (dataModel.haveTaskLock()) {
-                            // var opPayload = generateStringOfSize(opSizeinBytes);
-                            // var opKey = Math.random().toString()
-                            //dataModel.sharedmap.set(opKey, opPayload);
+                            var opPayload = generateStringOfSize(opSizeinBytes);
+                            var opKey = Math.random().toString()
+                            if (typeof dataModel.sharedmap !== 'undefined')
+                            {
+                                dataModel.sharedmap.set(opKey, opPayload);
+                                opsSent++;
+                            }
                             opsSent++;
                             if (opsSent % opsPerCycle === 0) {
                                 dataModel.abandonTask();
@@ -535,10 +539,13 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                 }
                 else {
                     while (opsSent < clientSendCount) {
-                        // var opPayload = generateStringOfSize(opSizeinBytes);
-                        // var opKey = Math.random().toString()
-                        //dataModel.sharedmap.set(opKey, opPayload);
-                        opsSent++;
+                        var opPayload = generateStringOfSize(opSizeinBytes);
+                        var opKey = Math.random().toString()
+                        if (typeof dataModel.sharedmap !== 'undefined')
+                        {
+                            dataModel.sharedmap.set(opKey, opPayload);
+                            opsSent++;
+                        }
                         await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
                     }
                 }
