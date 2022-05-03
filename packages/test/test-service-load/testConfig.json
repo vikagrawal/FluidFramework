@@ -162,18 +162,49 @@
                                               "faultInjectionMaxMs":  1800000,
                                               "opsSendType":  "allClientsConcurrentReadWrite"
                                           },
-                    "custom_profile_size":  {
-                                            "opRatePerMin":  7,
-                                            "signalsPerMin":  46,
-                                            "totalSignalsSendCount":  35000,
-                                            "progressIntervalMs":  20000,
-                                            "numClients":  10,
-                                            "totalSendCount":  5000,
-                                            "readWriteCycleMs":  30000,
-                                            "faultInjectionMinMs":  900000,
-                                            "faultInjectionMaxMs":  1800000,
-                                            "opsSendType":  "allClientsConcurrentReadWrite",
-                                            "opSizeinBytes": 2
-                                        }                   
-                 }
+                     "custom_profile_size":  {
+                                                "opRatePerMin":  7,
+                                                "signalsPerMin":  46,
+                                                "totalSignalsSendCount":  35000,
+                                                "progressIntervalMs":  20000,
+                                                "numClients":  10,
+                                                "totalSendCount":  5000,
+                                                "readWriteCycleMs":  30000,
+                                                "faultInjectionMinMs":  900000,
+                                                "faultInjectionMaxMs":  1800000,
+                                                "opsSendType":  "allClientsConcurrentReadWrite",
+                                                "opSizeinBytes": 2
+                                             },
+                     "binarySnapshotFormat": {
+                                                "opRatePerMin": 60,
+                                                "progressIntervalMs": 5000,
+                                                "numClients": 4,
+                                                "totalSendCount": 150,
+                                                "readWriteCycleMs": 10000,
+                                                "optionOverrides":  {
+                                                                        "odsp": {
+                                                                                    "configurations":   {
+                                                                                                            "Fluid.Driver.Odsp.snapshotFormatFetchType": [1]
+                                                                                                        }
+                                                                                }
+                                                                    }
+                                             },
+                    "odspContainerTypeSummaryUpload": {
+                                                        "opRatePerMin": 60,
+                                                        "progressIntervalMs": 5000,
+                                                        "numClients": 4,
+                                                        "totalSendCount": 150,
+                                                        "readWriteCycleMs": 10000,
+                                                        "optionOverrides":  {
+                                                                                "odsp": {
+                                                                                            "configurations":   {
+                                                                                                                    "Fluid.Driver.Odsp.EnableContainerTypeSummaryUpload": [true]
+                                                                                                                },
+                                                                                            "loader":   {
+                                                                                                            "summarizeProtocolTree": [true]
+                                                                                                        }
+                                                                                        }
+                                                                            }
+                                                        }
+                }
 }

@@ -17,7 +17,7 @@ import { ITelemetryLogger } from "@fluidframework/common-definitions";
 import { ILoadTest, IRunConfig } from "./loadTestDataStore";
 import { createCodeLoader, createTestDriver, getProfile, loggerP, safeExit } from "./utils";
 import { FaultInjectionDocumentServiceFactory } from "./faultInjectionDriver";
-import { generateLoaderOptions, generateRuntimeOptions } from "./optionsMatrix";
+import { generateLoaderOptions, generateConfigurations, generateRuntimeOptions } from "./optionsMatrix";
 import { IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
 import { IInboundSignalMessage } from "@fluidframework/runtime-definitions";
 
@@ -141,6 +141,8 @@ async function runnerProcess(
         const containerOptions = generateRuntimeOptions(
             seed, runConfig.testConfig?.optionOverrides?.[driver]?.container);
 
+        const configurations = generateConfigurations(
+            seed, runConfig.testConfig?.optionOverrides?.[driver]?.configurations);
         const testDriver: ITestDriver = await createTestDriver(driver, seed, runConfig.runId);
         const baseLogger = await loggerP;
         const logger = ChildLogger.create(baseLogger, undefined,
@@ -182,6 +184,11 @@ async function runnerProcess(
                 codeLoader: createCodeLoader(containerOptions[runConfig.runId % containerOptions.length]),
                 logger,
                 options: loaderOptions[runConfig.runId % containerOptions.length],
+                configProvider: {
+                    getRawConfig(name) {
+                        return configurations[runConfig.runId % configurations.length][name];
+                    },
+                },
             });
 
             const container: IContainer = await loader.resolve({ url, headers });

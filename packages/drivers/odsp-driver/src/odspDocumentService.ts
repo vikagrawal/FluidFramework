@@ -151,8 +151,6 @@ export class OdspDocumentService implements IDocumentService {
             }));
 
         this.hostPolicy = hostPolicy;
-        this.hostPolicy.fetchBinarySnapshotFormat ??=
-            this.mc.config.getBoolean("Fluid.Driver.Odsp.binaryFormatSnapshot");
         if (this.clientIsSummarizer) {
             this.hostPolicy = { ...this.hostPolicy, summarizerClient: true };
         }
@@ -187,6 +185,7 @@ export class OdspDocumentService implements IDocumentService {
                     }
                     throw new Error("Disconnected while uploading summary (attempt to perform flush())");
                 },
+                this.mc.config.getNumber("Fluid.Driver.Odsp.snapshotFormatFetchType"),
             );
         }
 
@@ -238,7 +237,7 @@ export class OdspDocumentService implements IDocumentService {
         return normalizeError(error, { props: {
             failedConnectionStep,
             separateTokenRequest,
-        }});
+        } });
     }
 
     /**
@@ -310,7 +309,7 @@ export class OdspDocumentService implements IDocumentService {
                     "createDeltaConnection",
                     !requestWebsocketTokenFromJoinSession);
                 if (typeof error === "object" && error !== null) {
-                    normalizedError.addTelemetryProperties({socketDocumentId: websocketEndpoint.id});
+                    normalizedError.addTelemetryProperties({ socketDocumentId: websocketEndpoint.id });
                 }
                 throw normalizedError;
             }
@@ -352,7 +351,7 @@ export class OdspDocumentService implements IDocumentService {
                             // This document can only be opened in storage-only mode.
                             // DeltaManager will recognize this error
                             // and load without a delta stream connection.
-                            this._policies = {...this._policies,storageOnly: true};
+                            this._policies = { ...this._policies, storageOnly: true };
                             throw new DeltaStreamConnectionForbiddenError(code, { driverVersion });
                         default:
                             continue;
@@ -388,7 +387,7 @@ export class OdspDocumentService implements IDocumentService {
         };
 
         const getResponseAndRefreshAfterDeltaMs = async () => {
-            let _response = await this.cache.sessionJoinCache.addOrGet(this.joinSessionKey, executeFetch);
+            const _response = await this.cache.sessionJoinCache.addOrGet(this.joinSessionKey, executeFetch);
             // If the response does not contain refreshSessionDurationSeconds, then treat it as old flow and let the
             // cache entry to be treated as expired after 1 hour.
             _response.joinSessionResponse.refreshSessionDurationSeconds =
@@ -418,16 +417,16 @@ export class OdspDocumentService implements IDocumentService {
                     .catch((error) => {
                         this.mc.logger.sendErrorEvent({
                                 eventName: "JoinSessionRefreshError",
-                                ...props,
+                                details: JSON.stringify(props),
                             },
                             error,
                         );
                     });
             } else {
                 // Logging just for informational purposes to help with debugging as this is a new feature.
-                this.mc.logger.sendErrorEvent({
+                this.mc.logger.sendTelemetryEvent({
                     eventName: "JoinSessionRefreshNotScheduled",
-                    ...props,
+                    details: JSON.stringify(props),
                 });
             }
         }
@@ -516,9 +515,9 @@ export class OdspDocumentService implements IDocumentService {
             // ICache
             {
                 write: async (key: string, opsData: string) => {
-                    return this.cache.persistedCache.put({...opsKey, key}, opsData);
+                    return this.cache.persistedCache.put({ ...opsKey, key }, opsData);
                 },
-                read: async (key: string) => this.cache.persistedCache.get({...opsKey, key}),
+                read: async (key: string) => this.cache.persistedCache.get({ ...opsKey, key }),
                 remove: () => { this.cache.persistedCache.removeEntries().catch(() => {}); },
             },
             batchSize,

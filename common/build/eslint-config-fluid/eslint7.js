@@ -47,16 +47,7 @@ module.exports = {
         "@typescript-eslint/brace-style": "off",
         "@typescript-eslint/comma-dangle": [
             "error",
-            {
-                "arrays": "always-multiline",
-                "enums": "always-multiline",
-                "exports": "always-multiline",
-                "functions": "always-multiline",
-                "generics": "never",
-                "imports": "always-multiline",
-                "objects": "always-multiline",
-                "tuples": "always-multiline",
-            }
+            "always-multiline",
         ],
         "@typescript-eslint/comma-spacing": "off",
         "@typescript-eslint/consistent-type-assertions": [
@@ -139,7 +130,12 @@ module.exports = {
         "@typescript-eslint/strict-boolean-expressions": "error",
         "@typescript-eslint/triple-slash-reference": "error",
         "@typescript-eslint/type-annotation-spacing": "error",
-        "@typescript-eslint/unbound-method": "off",
+        "@typescript-eslint/unbound-method": [
+            "error",
+            {
+                "ignoreStatic": true
+            }
+        ],
         "@typescript-eslint/unified-signatures": "error",
 
         // eslint-plugin-eslint-comments
