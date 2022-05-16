@@ -11,7 +11,7 @@ import { OptionsMatrix } from "@fluidframework/test-pairwise-generator";
 
 /** Type modeling the structure of the testConfig.json file */
 export interface ITestConfig {
-    profiles: { [name: string]: ILoadTestConfig | undefined };
+    profiles: { [name: string]: ILoadTestConfig | undefined; };
 }
 
 /** Type modeling the profile sub-structure of the testConfig.json file */
@@ -30,16 +30,16 @@ export interface ILoadTestConfig {
     /**
      * Number of "attachment" type blobs to upload over the course of the test run.
      */
-    totalBlobCount?: number,
+    totalBlobCount?: number;
     /**
      * Size of blob to upload in bytes. Note that some services may limit the maximum uploadable blob size (e.g. 4MB in
      * ODSP).
      */
-    blobSize?: number,
+    blobSize?: number;
     /**
      * Number of "attachment" type blobs to add while detached. Note this is only supported on ODSP currently.
      */
-    detachedBlobCount?: number,
+    detachedBlobCount?: number;
 
     /**
      * Override loader options to force a specific value
