@@ -211,32 +211,24 @@ use_old_TypeAliasDeclaration_LocalDriverApiType(
 * If breaking change required, add in package.json under typeValidation.broken:
 * "ClassDeclaration_LocalServerTestDriver": {"forwardCompat": false}
 */
-/* Commenting out the lines below because @FLUIDFRAMEWORK/TEST-DRIVER-DEFINITIONS v 0.59.2
-*  is actually not compatible with test-driver-definitions in vikagrawal/FluidFramework/loadtest/main
-*  Specifically, it does not contain the following function: doesDocumentExists(testId: string): Promise<boolean>
-*/
-// declare function get_old_ClassDeclaration_LocalServerTestDriver():
-//     TypeOnly<old.LocalServerTestDriver>;
-// declare function use_current_ClassDeclaration_LocalServerTestDriver(
-//     use: TypeOnly<current.LocalServerTestDriver>);
-// use_current_ClassDeclaration_LocalServerTestDriver(
-//     get_old_ClassDeclaration_LocalServerTestDriver());
+declare function get_old_ClassDeclaration_LocalServerTestDriver():
+    TypeOnly<old.LocalServerTestDriver>;
+declare function use_current_ClassDeclaration_LocalServerTestDriver(
+    use: TypeOnly<current.LocalServerTestDriver>);
+use_current_ClassDeclaration_LocalServerTestDriver(
+    get_old_ClassDeclaration_LocalServerTestDriver());
 
 /*
 * Validate back compat by using current type in place of old type
 * If breaking change required, add in package.json under typeValidation.broken:
 * "ClassDeclaration_LocalServerTestDriver": {"backCompat": false}
 */
-/* Commenting out the lines below because @FLUIDFRAMEWORK/TEST-DRIVER-DEFINITIONS v 0.59.2
-*  is actually not compatible with test-driver-definitions in vikagrawal/FluidFramework/loadtest/main
-*  Specifically, it does not contain the following function: doesDocumentExists(testId: string): Promise<boolean>
-*/
-// declare function get_current_ClassDeclaration_LocalServerTestDriver():
-//     TypeOnly<current.LocalServerTestDriver>;
-// declare function use_old_ClassDeclaration_LocalServerTestDriver(
-//     use: TypeOnly<old.LocalServerTestDriver>);
-// use_old_ClassDeclaration_LocalServerTestDriver(
-//     get_current_ClassDeclaration_LocalServerTestDriver());
+declare function get_current_ClassDeclaration_LocalServerTestDriver():
+    TypeOnly<current.LocalServerTestDriver>;
+declare function use_old_ClassDeclaration_LocalServerTestDriver(
+    use: TypeOnly<old.LocalServerTestDriver>);
+use_old_ClassDeclaration_LocalServerTestDriver(
+    get_current_ClassDeclaration_LocalServerTestDriver());
 
 /*
 * Validate forward compat by using old type in place of current type
@@ -291,16 +283,12 @@ use_old_TypeAliasDeclaration_OdspDriverApiType(
 * If breaking change required, add in package.json under typeValidation.broken:
 * "ClassDeclaration_OdspTestDriver": {"forwardCompat": false}
 */
-/* Commenting out the lines below because @FLUIDFRAMEWORK/TEST-DRIVER-DEFINITIONS v 0.59.2
-*  is actually not compatible with test-driver-definitions in vikagrawal/FluidFramework/loadtest/main
-*  Specifically, it does not contain the following function: doesDocumentExists(testId: string): Promise<boolean>
-*/
-// declare function get_old_ClassDeclaration_OdspTestDriver():
-//     TypeOnly<old.OdspTestDriver>;
-// declare function use_current_ClassDeclaration_OdspTestDriver(
-//     use: TypeOnly<current.OdspTestDriver>);
-// use_current_ClassDeclaration_OdspTestDriver(
-//     get_old_ClassDeclaration_OdspTestDriver());
+declare function get_old_ClassDeclaration_OdspTestDriver():
+    TypeOnly<old.OdspTestDriver>;
+declare function use_current_ClassDeclaration_OdspTestDriver(
+    use: TypeOnly<current.OdspTestDriver>);
+use_current_ClassDeclaration_OdspTestDriver(
+    get_old_ClassDeclaration_OdspTestDriver());
 
 /*
 * Validate back compat by using current type in place of old type
@@ -367,16 +355,12 @@ use_old_TypeAliasDeclaration_RouterliciousDriverApiType(
 * If breaking change required, add in package.json under typeValidation.broken:
 * "ClassDeclaration_RouterliciousTestDriver": {"forwardCompat": false}
 */
-/* Commenting out the lines below because @FLUIDFRAMEWORK/TEST-DRIVER-DEFINITIONS v 0.59.2
-*  is actually not compatible with test-driver-definitions in vikagrawal/FluidFramework/loadtest/main
-*  Specifically, it does not contain the following function: doesDocumentExists(testId: string): Promise<boolean>
-*/
-// declare function get_old_ClassDeclaration_RouterliciousTestDriver():
-//     TypeOnly<old.RouterliciousTestDriver>;
-// declare function use_current_ClassDeclaration_RouterliciousTestDriver(
-//     use: TypeOnly<current.RouterliciousTestDriver>);
-// use_current_ClassDeclaration_RouterliciousTestDriver(
-//     get_old_ClassDeclaration_RouterliciousTestDriver());
+declare function get_old_ClassDeclaration_RouterliciousTestDriver():
+    TypeOnly<old.RouterliciousTestDriver>;
+declare function use_current_ClassDeclaration_RouterliciousTestDriver(
+    use: TypeOnly<current.RouterliciousTestDriver>);
+use_current_ClassDeclaration_RouterliciousTestDriver(
+    get_old_ClassDeclaration_RouterliciousTestDriver());
 
 /*
 * Validate back compat by using current type in place of old type
@@ -395,16 +379,12 @@ use_old_ClassDeclaration_RouterliciousTestDriver(
 * If breaking change required, add in package.json under typeValidation.broken:
 * "ClassDeclaration_TinyliciousTestDriver": {"forwardCompat": false}
 */
-/* Commenting out the lines below because @FLUIDFRAMEWORK/TEST-DRIVER-DEFINITIONS v 0.59.2
-*  is actually not compatible with test-driver-definitions in vikagrawal/FluidFramework/loadtest/main
-*  Specifically, it does not contain the following function: doesDocumentExists(testId: string): Promise<boolean>
-*/
-// declare function get_old_ClassDeclaration_TinyliciousTestDriver():
-//     TypeOnly<old.TinyliciousTestDriver>;
-// declare function use_current_ClassDeclaration_TinyliciousTestDriver(
-//     use: TypeOnly<current.TinyliciousTestDriver>);
-// use_current_ClassDeclaration_TinyliciousTestDriver(
-//     get_old_ClassDeclaration_TinyliciousTestDriver());
+declare function get_old_ClassDeclaration_TinyliciousTestDriver():
+    TypeOnly<old.TinyliciousTestDriver>;
+declare function use_current_ClassDeclaration_TinyliciousTestDriver(
+    use: TypeOnly<current.TinyliciousTestDriver>);
+use_current_ClassDeclaration_TinyliciousTestDriver(
+    get_old_ClassDeclaration_TinyliciousTestDriver());
 
 /*
 * Validate back compat by using current type in place of old type
