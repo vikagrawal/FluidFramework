@@ -38,4 +38,4 @@ RUN npm run build:ci
 WORKDIR /app/packages/test/test-service-load
 
 # Since logger is not static dependency, link it.
-RUN npm link ../test-app-insights-logger/
+# RUN npm link ../test-app-insights-logger/
