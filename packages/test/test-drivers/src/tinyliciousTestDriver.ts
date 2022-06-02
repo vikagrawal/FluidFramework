@@ -33,4 +33,7 @@ export class TinyliciousTestDriver implements ITestDriver {
         const containerId = containerUrl && "id" in containerUrl ? containerUrl.id : testId;
         return `http://localhost:${defaultTinyliciousPort}/${containerId}`;
     }
+    async doesDocumentExists(testId: string): Promise<boolean> {
+        throw new Error("not implemented");
+    }
 }

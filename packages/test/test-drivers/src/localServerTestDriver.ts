@@ -32,4 +32,15 @@ export class LocalServerTestDriver implements ITestDriver {
     async createContainerUrl(testId: string): Promise<string> {
         return `http://localhost/${testId}`;
     }
+
+    async doesDocumentExists(testId: string): Promise<boolean> {
+        const doc = await (await this._server.databaseManager.getDocumentCollection()).findOne({
+            tenantId: "tenantId", // Its hardcoded for Local resolver.
+            documentId: testId,
+        });
+
+        // If document doesn't exists then it returns null, hence need to check for null.
+        // eslint-disable-next-line no-null/no-null
+        return doc !== undefined && doc !== null;
+    }
 }
