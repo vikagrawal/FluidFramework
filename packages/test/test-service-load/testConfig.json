@@ -177,17 +177,15 @@
                                               "opsSendType":  "allClientsConcurrentReadWrite"
                                           },
                      "custom_profile_size":  {
-                                                "opRatePerMin":  7,
+                                                "opRatePerMin":  14,
                                                 "signalsPerMin":  46,
                                                 "totalSignalsSendCount":  35000,
                                                 "progressIntervalMs":  20000,
                                                 "numClients":  10,
                                                 "totalSendCount":  5000,
                                                 "readWriteCycleMs":  30000,
-                                                "faultInjectionMinMs":  900000,
-                                                "faultInjectionMaxMs":  1800000,
                                                 "opsSendType":  "allClientsConcurrentReadWrite",
-                                                "opSizeinBytes": 2
+                                                "opSizeinBytes": 300   
                                              },
                      "binarySnapshotFormat": {
                                                 "opRatePerMin": 60,
