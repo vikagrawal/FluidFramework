@@ -192,10 +192,10 @@
                      "custom_profile_size_2":  {
                                                 "opRatePerMin":  14,
                                                 "signalsPerMin":  46,
-                                                "totalSignalsSendCount":  450000,
+                                                "totalSignalsSendCount":  2250000,
                                                 "progressIntervalMs":  20000,
-                                                "numClients":  10,
-                                                "totalSendCount":  150000,
+                                                "numClients":  30,
+                                                "totalSendCount":  750000,
                                                 "readWriteCycleMs":  30000,
                                                 "opsSendType":  "allClientsConcurrentReadWrite",
                                                 "opSizeinBytes": 300   
