@@ -363,7 +363,7 @@ export class OdspTestDriver implements ITestDriver {
             this.config.siteUrl,
             this.config.driveId,
             this.config.directory,
-            `${testId}.fluid`,
+            `${testId}.loadTest`,
         );
     }
 
