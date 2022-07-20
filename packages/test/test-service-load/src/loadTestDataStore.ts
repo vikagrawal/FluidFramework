@@ -31,6 +31,7 @@ export interface IRunConfig {
 export interface ILoadTest {
     run(config: IRunConfig, reset: boolean): Promise<boolean>;
     detached(config: Omit<IRunConfig, "runId">): Promise<LoadTestDataStoreModel>;
+    getRuntime(): Promise<IFluidDataStoreRuntime>;
 }
 
 const taskManagerKey = "taskManager";
