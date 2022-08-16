@@ -11,17 +11,16 @@ import {
 import { IFluidHandle, IRequest } from "@fluidframework/core-interfaces";
 import { ISharedCounter, SharedCounter } from "@fluidframework/counter";
 import { ITaskManager, TaskManager } from "@fluid-experimental/task-manager";
-import { IDirectory, ISharedDirectory } from "@fluidframework/map";
+import { IDirectory, ISharedDirectory} from "@fluidframework/map";
+import { ISharedMap, SharedMap } from "@fluidframework/map";
 import { IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
 import random from "random-js";
 import { IContainerRuntimeOptions } from "@fluidframework/container-runtime";
 import { IContainerRuntimeBase } from "@fluidframework/runtime-definitions";
 import { delay, assert } from "@fluidframework/common-utils";
-import { TelemetryLogger } from "@fluidframework/telemetry-utils";
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
 import { ILoadTestConfig } from "./testConfigFile";
 import { LeaderElection } from "./leaderElection";
-
 export interface IRunConfig {
     runId: number;
     testConfig: ILoadTestConfig;
@@ -30,12 +29,14 @@ export interface IRunConfig {
 }
 
 export interface ILoadTest {
-    run(config: IRunConfig, reset: boolean, logger): Promise<boolean>;
-    detached(config: Omit<IRunConfig, "runId">, logger): Promise<LoadTestDataStoreModel>;
+    run(config: IRunConfig, reset: boolean): Promise<boolean>;
+    detached(config: Omit<IRunConfig, "runId">): Promise<LoadTestDataStoreModel>;
+    getRuntime(): Promise<IFluidDataStoreRuntime>;
 }
 
 const taskManagerKey = "taskManager";
 const counterKey = "counter";
+const sharedMapKey = "sharedMap";
 const startTimeKey = "startTime";
 const taskTimeKey = "taskTime";
 const gcDataStoreKey = "dataStore";
@@ -135,7 +136,6 @@ export class LoadTestDataStoreModel {
         root: ISharedDirectory,
         runtime: IFluidDataStoreRuntime,
         containerRuntime: IContainerRuntimeBase,
-        logger: TelemetryLogger,
     ) {
         await LoadTestDataStoreModel.waitForCatchup(runtime);
 
@@ -151,14 +151,23 @@ export class LoadTestDataStoreModel {
             runDir.set(counterKey, SharedCounter.create(runtime).handle);
             runDir.set(startTimeKey, Date.now());
         }
+
+        if (!runDir.has(sharedMapKey)) {
+            runDir.set(sharedMapKey, SharedMap.create(runtime).handle);
+        }
+
         const counter = await runDir.get<IFluidHandle<ISharedCounter>>(counterKey)?.get();
         const taskmanager = await root.get<IFluidHandle<ITaskManager>>(taskManagerKey)?.get();
+        const sharedmap = await runDir.get<IFluidHandle<ISharedMap>>(sharedMapKey)?.get();
 
         if (counter === undefined) {
             throw new Error("counter not available");
         }
         if (taskmanager === undefined) {
             throw new Error("taskmanager not available");
+        }
+        if (sharedmap === undefined) {
+            throw new Error("sharedmap not available");
         }
 
         const gcDataStore = await this.getGCDataStore(config, root, containerRuntime);
@@ -172,7 +181,7 @@ export class LoadTestDataStoreModel {
             counter,
             runDir,
             gcDataStore.handle,
-            logger,
+            sharedmap,
         );
 
         if (reset) {
@@ -205,7 +214,7 @@ export class LoadTestDataStoreModel {
         public readonly counter: ISharedCounter,
         private readonly runDir: IDirectory,
         private readonly gcDataStoreHandle: IFluidHandle,
-        private readonly logger: TelemetryLogger,
+        public readonly sharedmap?: ISharedMap
     ) {
         const halfClients = Math.floor(this.config.testConfig.numClients / 2);
         // The runners are paired up and each pair shares a single taskId
@@ -252,24 +261,13 @@ export class LoadTestDataStoreModel {
         // download any blobs our partner may upload
         const partnerBlobCount = Math.trunc(config.testConfig.totalBlobCount ?? 0 / config.testConfig.numClients) +
             (this.partnerId < (config.testConfig.totalBlobCount ?? 0 % config.testConfig.numClients) ? 1 : 0);
-
-        const readBlob = (key: string) => {
-            if (key.startsWith(this.partnerBlobKeyPrefix)) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                this.root.get<IFluidHandle>(key)!.get().catch((error) => {
-                    this.logger.sendErrorEvent({
-                        eventName: "ReadBlobFailed_OnValueChanged",
-                        key,
-                    }, error);
-                });
-            }
-        };
         if (partnerBlobCount > 0) {
-            this.root.on("valueChanged", (v) => readBlob(v.key));
-        }
-        // additional loop of readBlob in case the eventlistener won't fire when container is closed.
-        for (const key of this.root.keys()) {
-            readBlob(key);
+            this.root.on("valueChanged", (v) => {
+                if (v.key.startsWith(this.partnerBlobKeyPrefix)) {
+                    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                    this.root.get<IFluidHandle>(v.key)?.get();
+                }
+            });
         }
     }
 
@@ -414,20 +412,14 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
         this.root.set(taskManagerKey, TaskManager.create(this.runtime).handle);
     }
 
-    public async detached(config: Omit<IRunConfig, "runId">, logger) {
+    public async detached(config: Omit<IRunConfig, "runId">) {
         return LoadTestDataStoreModel.createRunnerInstance(
-            { ...config, runId: -1 },
-            false,
-            this.root,
-            this.runtime,
-            this.context.containerRuntime,
-            logger,
-        );
+            { ...config, runId: -1 }, false, this.root, this.runtime, this.context.containerRuntime);
     }
 
-    public async run(config: IRunConfig, reset: boolean, logger: TelemetryLogger) {
+    public async run(config: IRunConfig, reset: boolean) {
         const dataModel = await LoadTestDataStoreModel.createRunnerInstance(
-            config, reset, this.root, this.runtime, this.context.containerRuntime, logger);
+            config, reset, this.root, this.runtime, this.context.containerRuntime);
 
         const leaderElection = new LeaderElection(this.runtime);
         leaderElection.setupLeaderElection();
@@ -437,50 +429,161 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
         // To set that up we start each client in a staggered way, each will independently go thru write
         // and listen cycles
 
-        const cycleMs = config.testConfig.readWriteCycleMs;
-        let t: NodeJS.Timeout | undefined;
+        let timeout: NodeJS.Timeout | undefined;
         if (config.verbose) {
             const printProgress = () => {
                 dataModel.printStatus();
-                t = setTimeout(printProgress, config.testConfig.progressIntervalMs);
+                timeout = setTimeout(printProgress, config.testConfig.progressIntervalMs);
             };
-            t = setTimeout(printProgress, config.testConfig.progressIntervalMs);
+            timeout = setTimeout(printProgress, config.testConfig.progressIntervalMs);
         }
-
+        
+        const opsRun = this.sendOps(dataModel, config, timeout)
+        const signalsRun = this.sendSignals(config, timeout)
+        const runResult = await Promise.all([opsRun, signalsRun]); //runResult is of type [boolean, void] as we return boolean for Ops alone based on runtime.disposed value
+        return runResult[0];
+    }
+    async getRuntime() {
+        return this.runtime;
+    }
+    async sendOps(dataModel: LoadTestDataStoreModel, config: IRunConfig, timeout: NodeJS.Timeout | undefined){
+        const cycleMs = config.testConfig.readWriteCycleMs;
         const clientSendCount = config.testConfig.totalSendCount / config.testConfig.numClients;
-        const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
-        const opsGapMs = cycleMs / opsPerCycle;
-        try {
-            while (dataModel.counter.value < clientSendCount && !this.disposed) {
-                // this enables a quick ramp down. due to restart, some clients can lag
-                // leading to a slow ramp down. so if there are less than half the clients
-                // and it's partner is done, return true to complete the runner.
-                if (this.runtime.getAudience().getMembers().size < config.testConfig.numClients / 2
-                    && ((await dataModel.getPartnerCounter())?.value ?? 0) >= clientSendCount) {
-                    return true;
+        const opsSendType = (typeof config.testConfig.opsSendType === 'undefined') ? 
+        'staggeredReadWrite' : config.testConfig.opsSendType; 
+        const opSizeinBytes = (typeof config.testConfig.opSizeinBytes === 'undefined') ? 
+        0 : config.testConfig.opSizeinBytes;
+        assert(opSizeinBytes >= 0, "opSizeinBytes must be greater than or equal to zero.");
+        const generateStringOfSize = (sizeInBytes: number): string => new Array(sizeInBytes + 1).join("0");
+        var opsSent = 0;
+        if (opsSendType === 'staggeredReadWrite')
+        {
+            const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
+            const opsGapMs = cycleMs / opsPerCycle;
+            try {
+                if (opSizeinBytes === 0)
+                {
+                    while (dataModel.counter.value < clientSendCount && !this.disposed) {
+                        // this enables a quick ramp down. due to restart, some clients can lag
+                        // leading to a slow ramp down. so if there are less than half the clients
+                        // and it's partner is done, return true to complete the runner.
+                        if (this.runtime.getAudience().getMembers().size < config.testConfig.numClients / 2
+                            && ((await dataModel.getPartnerCounter())?.value ?? 0) >= clientSendCount) {
+                            return true;
+                        }
+                        if (dataModel.haveTaskLock()) {
+                            dataModel.counter.increment(1);
+                            opsSent = dataModel.counter.value;
+                            if (opsSent % opsPerCycle === 0) {
+                                await dataModel.blobFinish();
+                                dataModel.abandonTask();
+                                // give our partner a half cycle to get the task
+                                await delay(cycleMs / 2);
+                            }
+                            else {
+                                // Random jitter of +- 50% of opWaitMs
+                                await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
+                            }
+                        }
+                        else {
+                            await dataModel.lockTask();
+                        }
+                    }
+                }
+                else {
+                    while (opsSent < clientSendCount) {
+                        if (dataModel.haveTaskLock()) {
+                            var opPayload = generateStringOfSize(opSizeinBytes);
+                            var opKey = Math.random().toString()
+                            if (typeof dataModel.sharedmap !== 'undefined')
+                            {
+                                dataModel.sharedmap.set(opKey, opPayload);
+                                opsSent++;
+                            }
+                            opsSent++;
+                            if (opsSent % opsPerCycle === 0) {
+                                dataModel.abandonTask();
+                                await delay(cycleMs / 2);
+                            }
+                            else {
+                                await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
+                            }
+                        }
+                        else {
+                            await dataModel.lockTask();
+                        }
+                    }
                 }
 
-                if (dataModel.haveTaskLock()) {
-                    dataModel.counter.increment(1);
-                    if (dataModel.counter.value % opsPerCycle === 0) {
-                        await dataModel.blobFinish();
-                        dataModel.abandonTask();
-                        // give our partner a half cycle to get the task
-                        await delay(cycleMs / 2);
-                    } else {
+                return !this.runtime.disposed;
+            }
+            finally {
+                if (timeout !== undefined) {
+                    clearTimeout(timeout);
+                }
+                dataModel.printStatus();
+            }
+        }
+        else if(opsSendType === 'allClientsConcurrentReadWrite')
+        {
+            try {
+                const opsPerCycle = config.testConfig.opRatePerMin * cycleMs / 60000;
+                const opsGapMs = cycleMs / opsPerCycle;
+                if (opSizeinBytes === 0)
+                {
+                    while (dataModel.counter.value < clientSendCount) {
+                        dataModel.counter.increment(1);
                         // Random jitter of +- 50% of opWaitMs
+                        await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));  
+                    }
+                }
+                else {
+                    while (opsSent < clientSendCount) {
+                        var opPayload = generateStringOfSize(opSizeinBytes);
+                        var opKey = Math.random().toString()
+                        if (typeof dataModel.sharedmap !== 'undefined')
+                        {
+                            dataModel.sharedmap.set(opKey, opPayload);
+                            opsSent++;
+                        }
                         await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));
                     }
-                } else {
-                    await dataModel.lockTask();
                 }
+                return true;
             }
-            return !this.runtime.disposed;
-        } finally {
-            if (t !== undefined) {
-                clearTimeout(t);
+            finally {
+                if (timeout !== undefined) {
+                    clearTimeout(timeout);
+                }
+                dataModel.printStatus();
             }
-            dataModel.printStatus();
+        }
+        else {
+            console.log(`${opsSendType} is not a supported opsSendType`)
+            return false;
+        }
+    }
+    async sendSignals(config: IRunConfig, timeout: NodeJS.Timeout | undefined){
+        const clientSignalsSendCount = (typeof config.testConfig.totalSignalsSendCount === 'undefined') ? 
+                                        0 : config.testConfig.totalSignalsSendCount / config.testConfig.numClients;
+        const cycleMs = config.testConfig.readWriteCycleMs;
+        const signalsPerCycle = (typeof config.testConfig.signalsPerMin === 'undefined') ? 
+                                 0 : config.testConfig.signalsPerMin * cycleMs / 60000;
+        const signalsGapMs = cycleMs / signalsPerCycle;
+        var submittedSignals = 0;
+        try {
+            while (submittedSignals < clientSignalsSendCount) {
+                // all the clients are sending signals; with signals, there is no particular need to have staggered writers and readers
+                this.runtime.submitSignal("generic-signal", true);
+                submittedSignals++;
+                // Random jitter of +- 50% of signalGapMs
+                await delay(signalsGapMs + signalsGapMs * random.real(0, .5, true)(config.randEng));  
+            }
+        }
+        finally {
+            if (timeout !== undefined) {
+                clearTimeout(timeout);
+            }
         }
     }
 }
