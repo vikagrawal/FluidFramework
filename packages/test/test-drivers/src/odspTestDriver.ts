@@ -318,7 +318,7 @@ export class OdspTestDriver implements ITestDriver {
         const driveItem = await getDriveItemByRootFileName(
             this.config.siteUrl,
             undefined,
-            `/${this.config.directory}/${testId}.fluid`,
+            `/${this.config.directory}/${testId}.loadTest`,
             {
                 accessToken: await this.getStorageToken({ siteUrl, refresh: false }),
                 refreshTokenFn: async () => this.getStorageToken({ siteUrl, refresh: false }),

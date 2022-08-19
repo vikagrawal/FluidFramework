@@ -29,8 +29,9 @@ export interface IRunConfig {
 }
 
 export interface ILoadTest {
-    run(config: IRunConfig, reset: boolean): Promise<boolean>;
-    detached(config: Omit<IRunConfig, "runId">): Promise<LoadTestDataStoreModel>;
+
+    run(config: IRunConfig, reset: boolean, logger): Promise<boolean>;
+    detached(config: Omit<IRunConfig, "runId">, logger): Promise<LoadTestDataStoreModel>;
     getRuntime(): Promise<IFluidDataStoreRuntime>;
 }
 
@@ -181,6 +182,7 @@ export class LoadTestDataStoreModel {
             counter,
             runDir,
             gcDataStore.handle,
+            logger,
             sharedmap,
         );
 
@@ -214,7 +216,8 @@ export class LoadTestDataStoreModel {
         public readonly counter: ISharedCounter,
         private readonly runDir: IDirectory,
         private readonly gcDataStoreHandle: IFluidHandle,
-        public readonly sharedmap?: ISharedMap
+        private readonly logger: TelemetryLogger,
+        public readonly sharedmap?: ISharedMap,
     ) {
         const halfClients = Math.floor(this.config.testConfig.numClients / 2);
         // The runners are paired up and each pair shares a single taskId
@@ -440,7 +443,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
             };
             timeout = setTimeout(printProgress, config.testConfig.progressIntervalMs);
         }
-        
+
         const opsRun = this.sendOps(dataModel, config, timeout)
         const signalsRun = this.sendSignals(config, timeout)
         const runResult = await Promise.all([opsRun, signalsRun]); //runResult is of type [boolean, void] as we return boolean for Ops alone based on runtime.disposed value
