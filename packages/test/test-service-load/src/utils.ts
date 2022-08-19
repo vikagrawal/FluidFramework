@@ -126,8 +126,13 @@ class MockDetachedBlobStorage implements IDetachedBlobStorage {
     }
 }
 
-export async function initialize(testDriver: ITestDriver, seed: number, testConfig: ILoadTestConfig,
-    verbose: boolean, testIdn?: string) {
+export async function initialize(
+    testDriver: ITestDriver,
+    seed: number,
+    testId_: string,
+    testConfig: ILoadTestConfig,
+    verbose: boolean,
+) {
     const randEng = random.engines.mt19937();
     randEng.seed(seed);
     const optionsOverride =
@@ -142,19 +147,18 @@ export async function initialize(testDriver: ITestDriver, seed: number, testConf
         randEng,
         generateConfigurations(seed, testConfig?.optionOverrides?.[optionsOverride]?.configurations));
 
-    const logger = ChildLogger.create(await loggerP, undefined,
-    {
-        all: {
-            driverType: testDriver.type,
-            driverEndpointName: testDriver.endpointName,
-        },
-    });
     // Construct the loader
     const loader = new Loader({
         urlResolver: testDriver.createUrlResolver(),
         documentServiceFactory: testDriver.createDocumentServiceFactory(),
         codeLoader: createCodeLoader(containerOptions),
-        logger,
+        logger: ChildLogger.create(await loggerP, undefined,
+            {
+                all: {
+                    driverType: testDriver.type,
+                    driverEndpointName: testDriver.endpointName,
+                },
+            }),
         options: loaderOptions,
         detachedBlobStorage: new MockDetachedBlobStorage(),
         configProvider: {
@@ -173,14 +177,17 @@ export async function initialize(testDriver: ITestDriver, seed: number, testConf
     if ((testConfig.detachedBlobCount ?? 0) > 0) {
         assert(testDriver.type === "odsp", "attachment blobs in detached container not supported on this service");
         const ds = await requestFluidObject<ILoadTest>(container, "/");
-        const dsm = await ds.detached({ testConfig, verbose, randEng }, logger);
+        const dsm = await ds.detached({ testConfig, verbose, randEng });
         await Promise.all([...Array(testConfig.detachedBlobCount).keys()].map(async (i) => dsm.writeBlob(i)));
     }
 
     // Currently odsp binary snapshot format only works for special file names. This won't affect any other test
     // since we have a unique dateId as prefix. So we can just add the required suffix.
-    const testId = testIdn ?? `${Date.now().toString()}-WireFormatV1RWOptimizedSnapshot_45e4`;
-    assert(testId !== "", "testId specified cannot be an empty string");
+
+    // const testId = (typeof testId_ === 'undefined') ?
+    //                 testId_ : `${Date.now().toString()}-WireFormatV1RWOptimizedSnapshot_45e4`;
+
+    const testId = testId_
     const request = testDriver.createCreateNewRequest(testId);
     await container.attach(request);
     assert(container.resolvedUrl !== undefined, "Container missing resolved URL after attach");

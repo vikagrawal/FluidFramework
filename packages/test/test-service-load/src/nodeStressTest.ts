@@ -52,8 +52,6 @@ async function main() {
         .option("-v, --verbose", "Enables verbose logging")
         .option("-b, --browserAuth", "Enables browser auth which may require a user to open a url in a browser.")
         .option("-m, --enableMetrics", "Enable capturing client & ops metrics")
-        .option("--createTestId", "Flag indicating whether to create a document corresponding \
-        to the testId passed")
         .parse(process.argv);
 
     const driver: TestDriverTypes = commander.driver;
@@ -67,7 +65,6 @@ async function main() {
     const browserAuth: true | undefined = commander.browserAuth;
     const credFile: string | undefined = commander.credFile;
     const enableMetrics: boolean = commander.enableMetrics ?? false;
-    const createTestId: boolean = commander.createTestId ?? false;
 
     const profile = getProfile(profileArg);
 
@@ -81,7 +78,7 @@ async function main() {
         driver,
         endpoint,
         { ...profile, name: profileArg, testUsers },
-        { testId, debug, verbose, seed, browserAuth, enableMetrics, createTestId });
+        { testId, debug, verbose, seed, browserAuth, enableMetrics });
 }
 
 /**
@@ -92,7 +89,7 @@ async function orchestratorProcess(
     endpoint: DriverEndpoint | undefined,
     profile: ILoadTestConfig & { name: string; testUsers?: ITestUserConfig; },
     args: { testId?: string; debug?: true; verbose?: true; seed?: number; browserAuth?: true;
-        enableMetrics?: boolean; createTestId?: boolean; },
+        enableMetrics?: boolean; },
 ) {
     const seed = args.seed ?? Date.now();
     const seedArg = `0x${seed.toString(16)}`;
@@ -105,14 +102,18 @@ async function orchestratorProcess(
         undefined,
         args.browserAuth);
 
+    // If testId is provided, then try to load the file first.
     let url;
-    if (args.testId !== undefined && args.createTestId === false) {
-        // If testId is provided and createTestId is false, then load the file;
-        url = await testDriver.createContainerUrl(args.testId);
-    } else {
-        // If no testId is provided, (or) if testId is provided but createTestId is not false, then create a file;
-        // In case testId is provided, name of the file to be created is taken as the testId provided
-        url = await initialize(testDriver, seed, profile, args.verbose === true, args.testId);
+    if (args.testId !== undefined) {
+        const docExists: boolean = await testDriver.doesDocumentExists(args.testId);
+        if (docExists) {
+            url = await testDriver.createContainerUrl(args.testId);
+        }
+    }
+
+    // If file doesn't exists, then create one.
+    if (url === undefined) {
+        url = await initialize(testDriver, seed, args.testId ?? Date.now().toString(), profile, args.verbose === true);
     }
 
     const estRunningTimeMin = Math.floor(2 * profile.totalSendCount / (profile.opRatePerMin * profile.numClients));
