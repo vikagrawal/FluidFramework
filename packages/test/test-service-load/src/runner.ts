@@ -377,10 +377,14 @@ async function setupOpsMetrics(container: IContainer, logger: ITelemetryLogger, 
         }
     };
 
+    let submitedOpsSize = 0;
+    let receivedOpsSize = 0;
     let submitedOps = 0;
     container.deltaManager.on("submitOp", (message) => {
         if (message?.type === "op") {
             submitedOps++;
+            var currOpSize = (JSON.stringify(message)).length;
+            submitedOpsSize += currOpSize;
         }
     });
 
@@ -388,6 +392,8 @@ async function setupOpsMetrics(container: IContainer, logger: ITelemetryLogger, 
     container.deltaManager.on("op", (message) => {
         if (message?.type === "op") {
             receivedOps++;
+            var currOpSize = (JSON.stringify(message)).length;
+            receivedOpsSize += currOpSize;
         }
     });
 
@@ -447,12 +453,35 @@ async function setupOpsMetrics(container: IContainer, logger: ITelemetryLogger, 
                 userName: getUserName(container),
             });
         }
+        if (submitedOps > 0) {
+            logger.send({
+                category: "metric",
+                eventName: "Fluid Operations Size Sent",
+                testHarnessEvent: true,
+                value: submitedOpsSize,
+                clientId: container.clientId,
+                userName: getUserName(container),
+            });
+        }
+        
+        if (receivedOps > 0) {
+            logger.send({
+                category: "metric",
+                eventName: "Fluid Operations Size Received",
+                testHarnessEvent: true,
+                value: receivedOpsSize,
+                clientId: container.clientId,
+                userName: getUserName(container),
+            });
+        }
 
 
         submitedOps = 0;
         receivedOps = 0;
         submittedSignals = 0;
         receivedSignals = 0;
+        submitedOpsSize = 0;
+        receivedOpsSize = 0;
 
         t = setTimeout(sendMetrics, progressIntervalMs);
     };
