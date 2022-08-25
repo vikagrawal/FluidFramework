@@ -176,8 +176,8 @@
                                               "faultInjectionMaxMs":  1800000,
                                               "optionOverrides":{
                                                 "odsp":{
-                                                    "loader":{
-                                                        "summarizeProtocolTree": [true]
+                                                    "configurations":{
+                                                        "Fluid.Container.summarizeProtocolTree": [true]
                                                     }
                                                 }
             
