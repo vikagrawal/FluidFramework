@@ -2,7 +2,12 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
+const importDynamic = new Function('modulePath', 'return import(modulePath)');
 
+const fetch = async (...args:any[]) => {
+  const module = await importDynamic('node-fetch');
+  return module.default(...args);
+};
 import assert from "assert";
 import os from "os";
 import { compare } from "semver";
@@ -389,5 +394,82 @@ export class OdspTestDriver implements ITestDriver {
             itemId,
             dataStorePath: "/",
         });
+    }
+
+    // Executes the API call to set sensitivity labels on file with provided itemID
+    public static async setSensitivityLabel(siteUrl: string, itemId: string, labelId: string, loginConfig: IOdspTestLoginInfo)    {
+        const tokenConfig: TokenConfig = {
+            ...loginConfig,
+            ...getMicrosoftConfiguration(),
+        };
+        var storageToken = await this.getStorageToken({ siteUrl, refresh: true }, tokenConfig);
+        var token = "Bearer " + storageToken;
+    
+        var raw = JSON.stringify({
+        "assignmentMethod": "privileged",
+        "justificationText": "test",
+        "ifMatchLabelId": "",
+        "id": labelId
+        });
+    
+        var requestOptions = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json',
+        'Authorization': token,
+        "X-CLP-COMPLIANT-APP": "true"
+        },
+        body: raw,
+        redirect: 'follow'
+        };
+        const url = siteUrl + "/_api/v2.1/drive/items/"+ itemId+"/setSensitivityLabel";
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => console.log(result))
+        .catch(error => console.log('error', error));
+    }
+
+    // Executes the API call to extract sensitivity labels on file with provided itemID
+    public static async extractSensitivityLabel(siteUrl: string, itemId: string, loginConfig: IOdspTestLoginInfo)
+    {
+        const tokenConfig: TokenConfig = {
+            ...loginConfig,
+            ...getMicrosoftConfiguration(),
+        };
+        var storageToken = await this.getStorageToken({ siteUrl, refresh: true }, tokenConfig);
+        var token = "Bearer " + storageToken;
+        
+        var requestOptions = {
+        method: 'POST',
+        headers: {'Authorization': token},
+        redirect: 'follow'
+        };
+        const url = siteUrl + "/_api/v2.1/drive/items/"+ itemId + "/extractSensitivityLabels";
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => console.log(result))
+        .catch(error => console.log('error', error));
+    }
+
+    // Executes the API call to fetch the capabilities of file with provided itemID
+    public static async getCapabilities(siteUrl: string, itemId: string, loginConfig: IOdspTestLoginInfo)
+    {
+        const tokenConfig: TokenConfig = {
+            ...loginConfig,
+            ...getMicrosoftConfiguration(),
+        };
+        var storageToken = await this.getStorageToken({ siteUrl, refresh: true }, tokenConfig);
+        var token = "Bearer " + storageToken;
+        
+        var requestOptions = {
+        method: 'GET',
+        headers: {'Authorization': token},
+        redirect: 'follow'
+        };
+
+        const url = siteUrl + "/_api/v2.1/drive/items/"+ itemId + "/opStream/capabilities?$select=*";
+        fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(result => console.log(result))
+        .catch(error => console.log('error', error));
     }
 }
