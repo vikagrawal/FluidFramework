@@ -24,6 +24,7 @@ import { FaultInjectionDocumentServiceFactory } from "./faultInjectionDriver";
 import { generateLoaderOptions, generateConfigurations, generateRuntimeOptions } from "./optionsMatrix";
 import { IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
 import { IInboundSignalMessage } from "@fluidframework/runtime-definitions";
+import { OdspTestDriver } from "@fluidframework/test-drivers";
 
 function printStatus(runConfig: IRunConfig, message: string) {
     if (runConfig.verbose) {
@@ -50,6 +51,7 @@ async function main() {
         .option("-l, --log <filter>", "Filter debug logging. If not provided, uses DEBUG env variable.")
         .option("-v, --verbose", "Enables verbose logging")
         .option("-m, --enableOpsMetrics", "Enable capturing ops metrics")
+        .option("-lb, --labelData <profile>", "String for label ids for tenants")
         .parse(process.argv);
 
     const driver: TestDriverTypes = commander.driver;
@@ -61,6 +63,7 @@ async function main() {
     const verbose: boolean = commander.verbose ?? false;
     const seed: number = commander.seed;
     const enableOpsMetrics: boolean = commander.enableOpsMetrics ?? false;
+    const labelData: string = commander.labelData;
 
     const profile = getProfile(profileArg);
 
@@ -90,7 +93,7 @@ async function main() {
         },
         url,
         seed,
-        enableOpsMetrics);
+        enableOpsMetrics, labelData);
 
     await safeExit(result, url, runId);
 }
@@ -138,6 +141,7 @@ async function runnerProcess(
     url: string,
     seed: number,
     enableOpsMetrics: boolean,
+    labelData: string,
 ): Promise<number> {
     // Assigning no-op value due to linter.
     let metricsCleanup: () => void = () => {};
@@ -226,6 +230,43 @@ async function runnerProcess(
                     documentServiceFactory, container, runConfig, faultInjectionMinMs, faultInjectionMaxMs);
             } else {
                 assert(faultInjectionMinMs === undefined, "Define faultInjectionMaxMs.");
+            }
+            
+            // Block is executed when data is provided to set the sensitivity labels on file.
+            if(labelData.length > 0)
+            {
+                var labelDataObj = JSON.parse(labelData);
+                var siteUrl;
+                var itemId;
+                if( container.resolvedUrl !== undefined)
+                {
+                    siteUrl = (container.resolvedUrl as any).siteUrl;
+                    itemId = (container.resolvedUrl as any).itemId;
+                }
+                var labelId = labelDataObj.label[siteUrl];
+
+                if(labelId === undefined)
+                {
+                    console.log("LabelId not available for " + siteUrl);
+                }
+                else
+                {
+                    const creds = {};
+                    const loginAccounts = testDriver.endpointName === "odsp" ?
+                        process.env.login__odsp__test__accounts : process.env.login__odspdf__test__accounts;
+                    assert(loginAccounts !== undefined, "Missing login__odsp/odspdf__test__accounts");
+                    const credsObj = JSON.parse(loginAccounts);
+                    const username = Object.keys(credsObj)[0];
+                    creds[username] = credsObj[username];
+                    const loginConfig = {
+                        username:username,
+                        password: creds[username],
+                        siteUrl,
+                        supportsBrowserAuth: false,
+                    }
+                    await OdspTestDriver.setSensitivityLabel(siteUrl, itemId, labelId, loginConfig);
+                }              
+                
             }
 
             try {
