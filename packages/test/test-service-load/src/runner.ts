@@ -233,7 +233,7 @@ async function runnerProcess(
             }
             
             // Block is executed when data is provided to set the sensitivity labels on file.
-            if(labelData.length > 0)
+            if(labelData.length > 0 && driver === "odsp")
             {
                 var labelDataObj = JSON.parse(labelData);
                 var siteUrl;

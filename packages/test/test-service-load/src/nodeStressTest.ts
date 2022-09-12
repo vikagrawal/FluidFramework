@@ -79,7 +79,7 @@ async function main() {
     const testUsers = await getTestUsers(credFile);
 
     let labelData = "";
-    if (label !== undefined)
+    if (label !== undefined && driver === "odsp")
     {
         try {
             var labelDataObj = JSON.parse(fs.readFileSync(label, "utf8"));
@@ -118,7 +118,8 @@ async function orchestratorProcess(
         seed,
         undefined,
         args.browserAuth);
-
+    
+    process.env['LoadTestDriver'] = driver;
     let url;
     if (args.testId !== undefined && args.createTestId === false) {
         // If testId is provided and createTestId is false, then load the file;

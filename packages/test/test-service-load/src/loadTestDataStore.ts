@@ -462,8 +462,11 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
 
         const opsRun = this.sendOps(dataModel, config, timeout)
         const signalsRun = this.sendSignals(config, timeout)
-        this.startExtractLabel(dataModel, config, (this.context.containerRuntime as any).context.container._resolvedUrl.siteUrl, (this.context.containerRuntime as any).context.container._resolvedUrl.itemId);
-        this.startGetCapabilities(dataModel, config, (this.context.containerRuntime as any).context.container._resolvedUrl.siteUrl, (this.context.containerRuntime as any).context.container._resolvedUrl.itemId);
+        if(process.env.LoadTestDriver === "odsp")
+        {
+            this.startExtractLabel(dataModel, config, (this.context.containerRuntime as any).context.container._resolvedUrl.siteUrl, (this.context.containerRuntime as any).context.container._resolvedUrl.itemId);
+            this.startGetCapabilities(dataModel, config, (this.context.containerRuntime as any).context.container._resolvedUrl.siteUrl, (this.context.containerRuntime as any).context.container._resolvedUrl.itemId);
+        }
         const runResult = await Promise.all([opsRun, signalsRun]); //runResult is of type [boolean, void] as we return boolean for Ops alone based on runtime.disposed value
         return runResult[0];
     }
