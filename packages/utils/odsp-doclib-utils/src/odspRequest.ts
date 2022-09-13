@@ -44,6 +44,13 @@ export async function postAsync(
     });
 }
 
+export async function postAsyncHeader(url: string, requestOption: any): Promise<Response> {
+    //Auth token is passed in the header in requestOption
+    return safeRequestCore(async () => {
+        return fetch(url, requestOption);
+    });
+}
+
 export async function unauthPostAsync(url: string, body: any): Promise<Response> {
     return safeRequestCore(async () => {
         return fetch(url, { body, method: "POST" });
