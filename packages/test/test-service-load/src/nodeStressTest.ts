@@ -54,6 +54,7 @@ async function main() {
         .option("-m, --enableMetrics", "Enable capturing client & ops metrics")
         .option("--createTestId", "Flag indicating whether to create a document corresponding \
         to the testId passed")
+        .option("-lb, --label <filepath>", "Filename containing label ids for tenants")
         .parse(process.argv);
 
     const driver: TestDriverTypes = commander.driver;
@@ -68,7 +69,7 @@ async function main() {
     const credFile: string | undefined = commander.credFile;
     const enableMetrics: boolean = commander.enableMetrics ?? false;
     const createTestId: boolean = commander.createTestId ?? false;
-
+    const label: string | undefined  = commander.label;
     const profile = getProfile(profileArg);
 
     if (log !== undefined) {
@@ -77,11 +78,24 @@ async function main() {
 
     const testUsers = await getTestUsers(credFile);
 
+    let labelData = "";
+    if (label !== undefined && driver === "odsp")
+    {
+        try {
+            var labelDataObj = JSON.parse(fs.readFileSync(label, "utf8"));
+            labelData = JSON.stringify(labelDataObj);
+        }
+        catch (e) {
+            console.error(`Failed to read ${label}`);
+            console.error(e);
+        }
+    }
+
     await orchestratorProcess(
         driver,
         endpoint,
         { ...profile, name: profileArg, testUsers },
-        { testId, debug, verbose, seed, browserAuth, enableMetrics, createTestId });
+        { testId, debug, verbose, seed, browserAuth, enableMetrics, createTestId }, labelData);
 }
 
 /**
@@ -92,7 +106,7 @@ async function orchestratorProcess(
     endpoint: DriverEndpoint | undefined,
     profile: ILoadTestConfig & { name: string; testUsers?: ITestUserConfig; },
     args: { testId?: string; debug?: true; verbose?: true; seed?: number; browserAuth?: true;
-        enableMetrics?: boolean; createTestId?: boolean; },
+        enableMetrics?: boolean; createTestId?: boolean; }, labelData: string,
 ) {
     const seed = args.seed ?? Date.now();
     const seedArg = `0x${seed.toString(16)}`;
@@ -104,7 +118,8 @@ async function orchestratorProcess(
         seed,
         undefined,
         args.browserAuth);
-
+    
+    process.env['LoadTestDriver'] = driver;
     let url;
     if (args.testId !== undefined && args.createTestId === false) {
         // If testId is provided and createTestId is false, then load the file;
@@ -129,6 +144,7 @@ async function orchestratorProcess(
             "--runId", i.toString(),
             "--url", url,
             "--seed", seedArg,
+            "--labelData", labelData,
         ];
         if (args.debug === true) {
             const debugPort = 9230 + i; // 9229 is the default and will be used for the root orchestrator process
