@@ -394,12 +394,8 @@ export class OdspTestDriver implements ITestDriver {
     }
 
     // Executes the API call to set sensitivity labels on file with provided itemID
-    public static async setSensitivityLabel(siteUrl: string, itemId: string, labelId: string, loginConfig: IOdspTestLoginInfo)    {
-        const tokenConfig: TokenConfig = {
-            ...loginConfig,
-            ...getMicrosoftConfiguration(),
-        };
-        var storageToken = await this.getStorageToken({ siteUrl, refresh: true }, tokenConfig);
+    public async setSensitivityLabel(siteUrl: string, itemId: string, labelId: string)    {
+        var storageToken = await this.getStorageToken({ siteUrl, refresh: true });
         var token = "Bearer " + storageToken;
     
         var raw = JSON.stringify({
@@ -425,16 +421,12 @@ export class OdspTestDriver implements ITestDriver {
     }
 
     // Executes the API call to extract sensitivity labels on file with provided itemID
-    public static async extractSensitivityLabel(siteUrl: string, itemId: string, loginConfig: IOdspTestLoginInfo)
+    public async extractSensitivityLabel(siteUrl: string, itemId: string)
     {
-        const tokenConfig: TokenConfig = {
-            ...loginConfig,
-            ...getMicrosoftConfiguration(),
-        };
-        var storageToken = await this.getStorageToken({ siteUrl, refresh: true }, tokenConfig);
+        var storageToken = await this.getStorageToken({ siteUrl, refresh: true });
         const authRequestInfo = {
             accessToken: storageToken,
-            refreshTokenFn: async () => this.getStorageToken({ siteUrl, refresh: true }, tokenConfig),
+            refreshTokenFn: async () => this.getStorageToken({ siteUrl, refresh: true }),
         };
         var requestOptions = {
         redirect: 'follow'
@@ -447,16 +439,12 @@ export class OdspTestDriver implements ITestDriver {
     }
 
     // Executes the API call to fetch the capabilities of file with provided itemID
-    public static async getCapabilities(siteUrl: string, itemId: string, loginConfig: IOdspTestLoginInfo)
+    public async getCapabilities(siteUrl: string, itemId: string)
     {
-        const tokenConfig: TokenConfig = {
-            ...loginConfig,
-            ...getMicrosoftConfiguration(),
-        };
-        var storageToken = await this.getStorageToken({ siteUrl, refresh: true }, tokenConfig);
+        var storageToken = await this.getStorageToken({ siteUrl, refresh: true });
         const authRequestInfo = {
             accessToken: storageToken,
-            refreshTokenFn: async () => this.getStorageToken({ siteUrl, refresh: true }, tokenConfig),
+            refreshTokenFn: async () => this.getStorageToken({ siteUrl, refresh: true }),
         };
         const url = siteUrl + "/_api/v2.1/drive/items/"+ itemId + "/opStream/capabilities?$select=*";
         await getAsync(url, authRequestInfo)

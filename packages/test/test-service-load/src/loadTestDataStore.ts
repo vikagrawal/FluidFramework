@@ -22,7 +22,6 @@ import { TelemetryLogger } from "@fluidframework/telemetry-utils";
 import { ISequencedDocumentMessage } from "@fluidframework/protocol-definitions";
 import { ILoadTestConfig } from "./testConfigFile";
 import { LeaderElection } from "./leaderElection";
-import { OdspTestDriver } from "@fluidframework/test-drivers";
 export interface IRunConfig {
     runId: number;
     testConfig: ILoadTestConfig;
@@ -462,68 +461,11 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
 
         const opsRun = this.sendOps(dataModel, config, timeout)
         const signalsRun = this.sendSignals(config, timeout)
-        if(process.env.LoadTestDriver === "odsp")
-        {
-            this.startExtractLabel(dataModel, config, (this.context.containerRuntime as any).context.container._resolvedUrl.siteUrl, (this.context.containerRuntime as any).context.container._resolvedUrl.itemId);
-            this.startGetCapabilities(dataModel, config, (this.context.containerRuntime as any).context.container._resolvedUrl.siteUrl, (this.context.containerRuntime as any).context.container._resolvedUrl.itemId);
-        }
         const runResult = await Promise.all([opsRun, signalsRun]); //runResult is of type [boolean, void] as we return boolean for Ops alone based on runtime.disposed value
         return runResult[0];
     }
     async getRuntime() {
         return this.runtime;
-    }
-    async startExtractLabel(dataModel, config, siteUrl, itemId)
-    {
-        const creds = {};
-        const envVar = { ...process.env };
-        var credsObj;
-        if(envVar.login__odsp__test__accounts !== undefined){
-            credsObj = JSON.parse(envVar.login__odsp__test__accounts);
-        } 
-        const username = Object.keys(credsObj)[0];
-        creds[username] = credsObj[username];
-        const loginConfig = {
-            username:username,
-            password: creds[username],
-            siteUrl,
-            supportsBrowserAuth: false,
-        }
-        
-        const clientSendCount = config.testConfig.totalSendCount / config.testConfig.numClients;
-        while (dataModel.counter.value < clientSendCount && !this.disposed){
-            await OdspTestDriver.extractSensitivityLabel(siteUrl, itemId, loginConfig);
-            // scheduleCallDelay is the duration between 2 calls for extracting labels in minutes.
-            const scheduleCallDelay = 15;  // in minutes
-            await delay(scheduleCallDelay*60*1000);
-        }
-        
-    }
-    async startGetCapabilities(dataModel, config, siteUrl, itemId)
-    {
-        const creds = {};
-        const envVar = { ...process.env };
-        var credsObj;
-        if(envVar.login__odsp__test__accounts !== undefined){
-            credsObj = JSON.parse(envVar.login__odsp__test__accounts);
-        } 
-        const username = Object.keys(credsObj)[0];
-        creds[username] = credsObj[username];
-        const loginConfig = {
-            username:username,
-            password: creds[username],
-            siteUrl,
-            supportsBrowserAuth: false,
-        }
-        
-        const clientSendCount = config.testConfig.totalSendCount / config.testConfig.numClients;
-        while (dataModel.counter.value < clientSendCount && !this.disposed){
-            await OdspTestDriver.getCapabilities(siteUrl, itemId, loginConfig);
-            // scheduleCallDelay is the duration between 2 calls for extracting labels in minutes.
-            const scheduleCallDelay = 15;  // in minutes
-            await delay(scheduleCallDelay*60*1000);
-        }
-        
     }
     async sendOps(dataModel: LoadTestDataStoreModel, config: IRunConfig, timeout: NodeJS.Timeout | undefined){
         const cycleMs = config.testConfig.readWriteCycleMs;

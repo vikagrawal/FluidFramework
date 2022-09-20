@@ -16,7 +16,7 @@ import { requestFluidObject } from "@fluidframework/runtime-utils";
 import { IRequestHeader } from "@fluidframework/core-interfaces";
 import { IContainer, LoaderHeader } from "@fluidframework/container-definitions";
 import { IDocumentServiceFactory, IFluidResolvedUrl } from "@fluidframework/driver-definitions";
-import { assert } from "@fluidframework/common-utils";
+import { delay, assert } from "@fluidframework/common-utils";
 import { ITelemetryLogger } from "@fluidframework/common-definitions";
 import { ILoadTest, IRunConfig } from "./loadTestDataStore";
 import { createCodeLoader, createTestDriver, getProfile, loggerP, safeExit } from "./utils";
@@ -258,19 +258,24 @@ async function runnerProcess(
                     const credsObj = JSON.parse(loginAccounts);
                     const username = Object.keys(credsObj)[0];
                     creds[username] = credsObj[username];
-                    const loginConfig = {
-                        username:username,
-                        password: creds[username],
-                        siteUrl,
-                        supportsBrowserAuth: false,
-                    }
-                    await OdspTestDriver.setSensitivityLabel(siteUrl, itemId, labelId, loginConfig);
+                    await (testDriver as OdspTestDriver).setSensitivityLabel(siteUrl, itemId, labelId);
                 }              
                 
             }
 
             try {
                 printStatus(runConfig, `running`);
+                if (driver === "odsp") {
+                    var siteUrl;
+                    var itemId;
+                    if( container.resolvedUrl !== undefined)
+                    {
+                        siteUrl = (container.resolvedUrl as any).siteUrl;
+                        itemId = (container.resolvedUrl as any).itemId;
+                    }
+                    startExtractLabel(testDriver as OdspTestDriver, siteUrl, itemId, container);
+                    startGetCapabilities(testDriver as OdspTestDriver, siteUrl, itemId, container);
+                }
                 done = await test.run(runConfig, reset, logger);
                 reset = false;
                 printStatus(runConfig, done ? `finished` : "closed");
@@ -292,6 +297,39 @@ async function runnerProcess(
         printStatus(runConfig, `error: loading test`);
         console.error(e);
         return -1;
+    }
+}
+
+async function startExtractLabel(testDriver: OdspTestDriver, siteUrl: string, itemId: string, container: IContainer)
+{
+    const creds = {};
+    const loginAccounts = testDriver.endpointName === "odsp" ?
+        process.env.login__odsp__test__accounts : process.env.login__odspdf__test__accounts;
+    assert(loginAccounts !== undefined, "Missing login__odsp/odspdf__test__accounts");
+    const credsObj = JSON.parse(loginAccounts); 
+    const username = Object.keys(credsObj)[0];
+    creds[username] = credsObj[username];
+    while (!container.closed){
+        await testDriver.extractSensitivityLabel(siteUrl, itemId);
+        // scheduleCallDelay is the duration between 2 calls for extracting labels in minutes.
+        const scheduleCallDelay = 15;  // in minutes
+        await delay(scheduleCallDelay*60*1000);
+    } 
+}
+async function startGetCapabilities(testDriver: OdspTestDriver, siteUrl: string, itemId: string, container: IContainer)
+{
+    const creds = {};
+    const loginAccounts = testDriver.endpointName === "odsp" ?
+        process.env.login__odsp__test__accounts : process.env.login__odspdf__test__accounts;
+    assert(loginAccounts !== undefined, "Missing login__odsp/odspdf__test__accounts");
+    const credsObj = JSON.parse(loginAccounts);
+    const username = Object.keys(credsObj)[0];
+    creds[username] = credsObj[username];
+    while (!container.closed){
+        await testDriver.getCapabilities(siteUrl, itemId);
+        // scheduleCallDelay is the duration between 2 calls for extracting labels in minutes.
+        const scheduleCallDelay = 15;  // in minutes
+        await delay(scheduleCallDelay*60*1000);
     }
 }
 
