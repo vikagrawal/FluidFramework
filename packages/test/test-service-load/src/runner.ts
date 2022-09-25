@@ -18,12 +18,12 @@ import { IContainer, LoaderHeader } from "@fluidframework/container-definitions"
 import { IDocumentServiceFactory, IFluidResolvedUrl } from "@fluidframework/driver-definitions";
 import { assert } from "@fluidframework/common-utils";
 import { ITelemetryLogger } from "@fluidframework/common-definitions";
+import { IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
+import { IInboundSignalMessage } from "@fluidframework/runtime-definitions";
 import { ILoadTest, IRunConfig } from "./loadTestDataStore";
 import { createCodeLoader, createTestDriver, getProfile, loggerP, safeExit } from "./utils";
 import { FaultInjectionDocumentServiceFactory } from "./faultInjectionDriver";
 import { generateLoaderOptions, generateConfigurations, generateRuntimeOptions } from "./optionsMatrix";
-import { IFluidDataStoreRuntime } from "@fluidframework/datastore-definitions";
-import { IInboundSignalMessage } from "@fluidframework/runtime-definitions";
 
 function printStatus(runConfig: IRunConfig, message: string) {
     if (runConfig.verbose) {
@@ -356,7 +356,7 @@ function scheduleContainerClose(
 }
 
 async function setupOpsMetrics(container: IContainer, logger: ITelemetryLogger, progressIntervalMs: number,
-                               testRuntime: IFluidDataStoreRuntime) {
+    testRuntime: IFluidDataStoreRuntime) {
     // Use map to cache userName instead of recomputing.
     const clientIdUserNameMap: { [clientId: string]: string; } = {};
 
@@ -398,15 +398,11 @@ async function setupOpsMetrics(container: IContainer, logger: ITelemetryLogger, 
     });
 
     let submittedSignals = 0;
+    let receivedSignals = 0;
     testRuntime.on("signal", (message: IInboundSignalMessage, local: boolean) => {
         if (message.type === "generic-signal" && local === true) {
             submittedSignals += 1;
-        }
-    });
-
-    let receivedSignals = 0;
-    testRuntime.on("signal", (message: IInboundSignalMessage, local: boolean) => {
-        if (message.type === "generic-signal" && local === false) {
+        } else if (message.type === "generic-signal" && local === false) {
             receivedSignals += 1;
         }
     });
