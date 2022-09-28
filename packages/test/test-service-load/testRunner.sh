@@ -22,6 +22,7 @@ credentials=`jq -c '.credentials|to_entries|first as $x | { ($x.key): ($x.value)
 export login__odsp__test__accounts=$credentials
 
 docId=`jq -c .docId ./testUserConfig.json | xargs`
+echo "Test profile used: $TEST_PROFILE";
 node ./dist/nodeStressTest.js -p $TEST_PROFILE -c ./testUserConfig.json -m > loadTestRun.log
 
 echo "Test complete. Exiting."
