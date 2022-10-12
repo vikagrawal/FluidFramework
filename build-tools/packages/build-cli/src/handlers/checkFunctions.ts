@@ -2,16 +2,19 @@
  * Copyright (c) Microsoft Corporation and contributors. All rights reserved.
  * Licensed under the MIT License.
  */
-
 import { strict as assert } from "assert";
-import path from "path";
-import { bumpVersionScheme } from "@fluid-tools/version-tools";
-import { exec, MonoRepoKind } from "@fluidframework/build-tools";
 import inquirer from "inquirer";
 import { Machine } from "jssm";
+import path from "path";
+
+import { MonoRepoKind, exec } from "@fluidframework/build-tools";
+
+import { bumpVersionScheme } from "@fluid-tools/version-tools";
+
 import {
     generateBumpDepsBranchName,
     generateBumpVersionBranchName,
+    generateCommitMessage,
     generateReleaseBranchName,
     getPreReleaseDependencies,
     getReleaseSourceForReleaseGroup,
@@ -21,7 +24,7 @@ import { CommandLogger } from "../logging";
 import { MachineState } from "../machines";
 import { isReleaseGroup } from "../releaseGroups";
 import { FluidReleaseStateHandlerData } from "./fluidReleaseStateHandler";
-import { StateHandlerFunction, BaseStateHandler } from "./stateHandlers";
+import { BaseStateHandler, StateHandlerFunction } from "./stateHandlers";
 
 /**
  * Checks that the current branch matches the expected branch for a release.
@@ -585,18 +588,14 @@ export const checkShouldCommit: StateHandlerFunction = async (
         return true;
     }
 
-    const version = releaseVersion;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const newVersion = bumpVersionScheme(version, bumpType!);
-
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const branchName = generateBumpVersionBranchName(releaseGroup!, bumpType!, releaseVersion!);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const commitMsg = generateCommitMessage(releaseGroup!, bumpType!, releaseVersion!);
 
     await context.createBranch(branchName);
-
     log.verbose(`Created bump branch: ${branchName}`);
 
-    const commitMsg = `[bump] ${releaseGroup}: ${version} => ${newVersion} (${bumpType})\n\nPost-release ${bumpType} bump of ${releaseGroup}.`;
     await context.gitRepo.commit(commitMsg, `Error committing to ${branchName}`);
     BaseStateHandler.signalSuccess(machine, state);
     return true;
@@ -633,9 +632,9 @@ export const checkShouldCommitReleasedDepsBump: StateHandlerFunction = async (
     await context.gitRepo.createBranch(branchName);
 
     log.verbose(`Created bump branch: ${branchName}`);
-    log.info(`BUMP: ${releaseGroup}: Bumped prerelease dependencies to release versions.`);
+    log.info(`${releaseGroup}: Bumped prerelease dependencies to release versions.`);
 
-    const commitMsg = `[bump] ${releaseGroup}: update prerelease dependencies to release versions`;
+    const commitMsg = `[dependencies] ${releaseGroup}: update prerelease dependencies to release versions`;
     await context.gitRepo.commit(commitMsg, `Error committing to ${branchName}`);
     BaseStateHandler.signalSuccess(machine, state);
     return true;
