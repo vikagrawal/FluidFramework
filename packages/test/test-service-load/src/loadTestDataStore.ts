@@ -521,7 +521,6 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                                 dataModel.sharedmap.set(opKey, opPayload);
                                 opsSent++;
                             }
-                            opsSent++;
                             if (opsSent % opsPerCycle === 0) {
                                 dataModel.abandonTask();
                                 await delay(cycleMs / 2);
@@ -554,6 +553,7 @@ class LoadTestDataStore extends DataObject implements ILoadTest {
                 {
                     while (dataModel.counter.value < clientSendCount) {
                         dataModel.counter.increment(1);
+                        opsSent = dataModel.counter.value;
                         // Random jitter of +- 50% of opWaitMs
                         await delay(opsGapMs + opsGapMs * random.real(0, .5, true)(config.randEng));  
                     }
